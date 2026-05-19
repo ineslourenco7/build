@@ -1,30 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-type GeneratedProject = {
-  html: string;
-  css: string;
-  js: string;
-};
-
+type GeneratedProject = { html: string; css: string; js: string };
 const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash-lite'];
 
 function isPropFirmPrompt(prompt: string) {
   const lower = prompt.toLowerCase();
-  return (
-    lower.includes('prop firm') ||
-    lower.includes('propfirm') ||
-    lower.includes('funded trader') ||
-    lower.includes('funded trading') ||
-    lower.includes('forex challenge') ||
-    lower.includes('trading challenge') ||
-    lower.includes('copy trading') ||
-    lower.includes('traders de forex') ||
-    lower.includes('trader funding')
-  );
+  return ['prop firm', 'propfirm', 'funded trader', 'funded trading', 'forex challenge', 'trading challenge', 'copy trading', 'traders de forex', 'trader funding'].some((term) => lower.includes(term));
 }
 
-function propFirmTemplate(prompt: string): GeneratedProject {
-  const brandName = prompt.toLowerCase().includes('copy') ? 'CopyVault Markets' : 'ApexFunded';
+function isPhotographerPrompt(prompt: string) {
+  const lower = prompt.toLowerCase();
+  return ['fotografo', 'fotógrafo', 'fotografia', 'fotografa', 'fotógrafa', 'photographer', 'photography', 'wedding photographer', 'portfolio fotografico', 'portfólio fotográfico'].some((term) => lower.includes(term));
+}
+
+function photographyTemplate(prompt: string): GeneratedProject {
+  const lower = prompt.toLowerCase();
+  const isWedding = lower.includes('casamento') || lower.includes('wedding');
+  const isFashion = lower.includes('moda') || lower.includes('fashion') || lower.includes('editorial');
+  const isArchitecture = lower.includes('arquitetura') || lower.includes('interiores') || lower.includes('architecture');
+  const brandName = isWedding ? 'Luz & Voto' : isFashion ? 'Noir Frame Studio' : isArchitecture ? 'Forma & Luz' : 'Marta Vale Studio';
+  const specialty = isWedding ? 'casamentos editoriais e histórias íntimas' : isFashion ? 'moda, retrato e campanhas editoriais' : isArchitecture ? 'arquitetura, interiores e hospitalidade' : 'retratos, marcas pessoais e eventos';
+  const heroImage = isWedding
+    ? 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1300&q=80'
+    : isFashion
+      ? 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1300&q=80'
+      : isArchitecture
+        ? 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1300&q=80'
+        : 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1300&q=80';
 
   return {
     html: `<!doctype html>
@@ -37,299 +39,142 @@ function propFirmTemplate(prompt: string): GeneratedProject {
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="mark">A</span>${brandName}</div>
+    <div class="brand">${brandName}</div>
     <nav>
-      <button data-target="challenges">Challenges</button>
-      <button data-target="dashboard">Dashboard</button>
-      <button data-target="rules">Regras</button>
-      <button data-target="faq">FAQ</button>
+      <button data-target="portfolio">Portfólio</button>
+      <button data-target="stories">Histórias</button>
+      <button data-target="services">Serviços</button>
+      <button data-target="booking">Booking</button>
     </nav>
-    <button class="ghost" data-target="plans">Começar</button>
+    <button class="nav-cta" data-target="booking">Marcar sessão</button>
   </header>
 
   <main>
     <section id="home" class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">PROP FIRM • FOREX • FUTURES • CRYPTO</p>
-        <h1>Capital para traders consistentes.</h1>
-        <p class="lead">Uma plataforma premium para traders que querem provar disciplina, gerir risco e escalar contas simuladas com regras claras, payouts rápidos e métricas transparentes.</p>
-        <div class="hero-actions">
-          <button class="primary" data-target="plans">Ver challenges</button>
-          <button class="secondary" data-target="dashboard">Ver dashboard</button>
-        </div>
-        <div class="trust-row">
-          <span>✓ Até 90% payout</span>
-          <span>✓ Sem tempo mínimo</span>
-          <span>✓ Regras transparentes</span>
+        <p class="eyebrow">Fotografia premium • ${specialty}</p>
+        <h1>Imagens que respiram silêncio, luz e intenção.</h1>
+        <p class="lead">Um portfólio editorial para clientes que procuram direção criativa, narrativa visual e uma presença online com impacto imediato.</p>
+        <div class="actions">
+          <button class="primary" data-target="portfolio">Ver portfólio</button>
+          <button class="secondary" data-target="booking">Pedir orçamento</button>
         </div>
       </div>
-
-      <div class="terminal-card">
-        <div class="terminal-head"><span></span><span></span><span></span></div>
-        <div class="chart-wrap">
-          <svg viewBox="0 0 520 280" aria-label="Equity curve">
-            <defs>
-              <linearGradient id="glow" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#22c55e" stop-opacity="0.35" />
-                <stop offset="100%" stop-color="#22c55e" stop-opacity="0" />
-              </linearGradient>
-            </defs>
-            <path class="area" d="M0 230 C80 190 120 210 170 160 C230 90 280 140 335 80 C390 20 430 70 520 34 L520 280 L0 280 Z" />
-            <path class="line" d="M0 230 C80 190 120 210 170 160 C230 90 280 140 335 80 C390 20 430 70 520 34" />
-          </svg>
-        </div>
-        <div class="metric-grid">
-          <div><small>Equity</small><strong>$127,840</strong></div>
-          <div><small>Profit Split</small><strong>90%</strong></div>
-          <div><small>Max DD</small><strong>8%</strong></div>
-          <div><small>Payout</small><strong>48h</strong></div>
-        </div>
+      <div class="hero-frame">
+        <img src="${heroImage}" alt="Fotografia editorial premium" />
+        <div class="caption"><span>Featured story</span><strong>Lisboa, 2026</strong></div>
       </div>
     </section>
 
-    <section class="stats-strip">
-      <article><strong>$42M+</strong><span>capital simulado atribuído</span></article>
-      <article><strong>18k+</strong><span>traders avaliados</span></article>
-      <article><strong>92%</strong><span>payout máximo</span></article>
-      <article><strong>24/7</strong><span>área de trader</span></article>
+    <section class="ticker">
+      <span>EDITORIAL</span><span>PORTRAIT</span><span>WEDDINGS</span><span>BRANDS</span><span>ARCHITECTURE</span><span>STORYTELLING</span>
     </section>
 
-    <section id="plans" class="section">
+    <section id="portfolio" class="portfolio">
       <div class="section-head">
-        <p class="eyebrow">CHALLENGES</p>
-        <h2>Escolhe a conta e prova a tua consistência.</h2>
+        <p class="eyebrow">Portfólio</p>
+        <h2>Uma galeria com presença de revista e curadoria visual.</h2>
       </div>
-      <div class="plans">
-        <article class="plan">
-          <p>Starter</p><h3>$25k</h3><span>Meta 8% • DD 6%</span><strong>€149</strong><button data-target="contact">Começar</button>
-        </article>
-        <article class="plan featured">
-          <div class="badge">Mais popular</div><p>Professional</p><h3>$100k</h3><span>Meta 10% • DD 8%</span><strong>€399</strong><button data-target="contact">Começar Pro</button>
-        </article>
-        <article class="plan">
-          <p>Elite</p><h3>$200k</h3><span>Meta 10% • DD 10%</span><strong>€799</strong><button data-target="contact">Candidatar</button>
-        </article>
+      <div class="filters">
+        <button class="filter active" data-filter="all">Tudo</button>
+        <button class="filter" data-filter="portrait">Retrato</button>
+        <button class="filter" data-filter="wedding">Casamento</button>
+        <button class="filter" data-filter="brand">Marca</button>
+        <button class="filter" data-filter="space">Espaços</button>
+      </div>
+      <div class="masonry">
+        <img data-category="portrait" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=760&q=80" alt="Retrato editorial" />
+        <img data-category="wedding" src="https://images.unsplash.com/photo-1523438885200-e635ba2c371e?auto=format&fit=crop&w=760&q=80" alt="Detalhe de casamento" />
+        <img data-category="brand" src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=760&q=80" alt="Campanha de marca" />
+        <img data-category="space" src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=760&q=80" alt="Interior fotografado" />
+        <img data-category="portrait" src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=760&q=80" alt="Retrato natural" />
+        <img data-category="brand" src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=760&q=80" alt="Editorial de moda" />
+        <img data-category="wedding" src="https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=760&q=80" alt="Casal em sessão" />
+        <img data-category="space" src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=760&q=80" alt="Arquitetura e luz" />
       </div>
     </section>
 
-    <section id="dashboard" class="dashboard-section">
+    <section class="stats">
+      <article><strong>12</strong><span>anos de direção visual</span></article>
+      <article><strong>180+</strong><span>sessões entregues</span></article>
+      <article><strong>72h</strong><span>preview gallery</span></article>
+    </section>
+
+    <section id="stories" class="stories">
+      <div class="story-large">
+        <img src="https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=1100&q=80" alt="Fotógrafa em sessão" />
+      </div>
+      <div class="story-copy">
+        <p class="eyebrow">Processo</p>
+        <h2>Antes da fotografia, vem a direção.</h2>
+        <p>Cada sessão começa com moodboard, referências, escolha de luz e ritmo. O objetivo é criar imagens bonitas, mas também úteis: para vender, recordar, publicar e construir marca.</p>
+        <blockquote>“O processo foi calmo, elegante e incrivelmente profissional.” — Clara Mendes</blockquote>
+      </div>
+    </section>
+
+    <section id="services" class="services">
       <div class="section-head">
-        <p class="eyebrow">TRADER DASHBOARD</p>
-        <h2>Métricas claras para decisões disciplinadas.</h2>
+        <p class="eyebrow">Serviços</p>
+        <h2>Pacotes pensados para diferentes histórias.</h2>
       </div>
-      <div class="dashboard">
-        <aside>
-          <div class="pill active">Overview</div>
-          <div class="pill">Risk Monitor</div>
-          <div class="pill">Payouts</div>
-          <div class="pill">Certificates</div>
-        </aside>
-        <div class="dash-main">
-          <div class="dash-top">
-            <div><small>Balance</small><strong>$103,248</strong></div>
-            <div><small>Today's P/L</small><strong class="green">+$1,284</strong></div>
-            <div><small>Daily Loss</small><strong>1.2%</strong></div>
-          </div>
-          <div class="bars">
-            <span style="height: 42%"></span><span style="height: 58%"></span><span style="height: 38%"></span><span style="height: 74%"></span><span style="height: 64%"></span><span style="height: 88%"></span><span style="height: 78%"></span>
-          </div>
-        </div>
+      <div class="cards">
+        <article><p>Essencial</p><h3>Retrato</h3><span>1h sessão • 20 fotos editadas</span><strong>desde €180</strong><button data-target="booking">Reservar</button></article>
+        <article class="featured"><p>Editorial</p><h3>Marca pessoal</h3><span>Direção criativa • moodboard • 45 fotos</span><strong>desde €420</strong><button data-target="booking">Escolher</button></article>
+        <article><p>Premium</p><h3>Casamento</h3><span>Dia completo • galeria online • álbum</span><strong>desde €1450</strong><button data-target="booking">Consultar</button></article>
       </div>
     </section>
 
-    <section id="rules" class="section rules">
-      <div class="section-head"><p class="eyebrow">REGRAS</p><h2>Sem letras pequenas. Só gestão de risco.</h2></div>
-      <div class="rules-grid">
-        <article><span>01</span><h3>Drawdown diário</h3><p>Limite diário claro para proteger a conta e premiar consistência.</p></article>
-        <article><span>02</span><h3>Sem limite de tempo</h3><p>Avança quando a tua estratégia estiver pronta, sem pressões artificiais.</p></article>
-        <article><span>03</span><h3>Payout rápido</h3><p>Processamento em até 48h após aprovação e validação da conta.</p></article>
-        <article><span>04</span><h3>Trading responsável</h3><p>Regras contra martingale, abuso de latência e excesso de risco.</p></article>
-      </div>
-    </section>
-
-    <section class="testimonials">
-      <div class="section-head"><p class="eyebrow">TRADERS</p><h2>Experiência pensada para performance.</h2></div>
-      <div class="quote-grid">
-        <blockquote>“O dashboard é muito claro. Consegui acompanhar risco e objetivos sem complicações.”<span>— Miguel R., Forex Trader</span></blockquote>
-        <blockquote>“O processo de avaliação é direto e o payout chegou em dois dias.”<span>— Sara L., Futures Trader</span></blockquote>
-      </div>
-    </section>
-
-    <section id="faq" class="section faq">
-      <div class="section-head"><p class="eyebrow">FAQ</p><h2>Perguntas frequentes</h2></div>
-      <div class="faq-list">
-        <button class="faq-item"><span>Existe tempo mínimo para passar o challenge?</span><strong>+</strong><p>Não. O objetivo é avaliar consistência e gestão de risco, não velocidade.</p></button>
-        <button class="faq-item"><span>Posso usar EAs?</span><strong>+</strong><p>Sim, desde que respeitem as regras de risco e não explorem latência ou arbitragem proibida.</p></button>
-        <button class="faq-item"><span>Isto é aconselhamento financeiro?</span><strong>+</strong><p>Não. A plataforma é educacional/simulada e trading envolve risco.</p></button>
-      </div>
-    </section>
-
-    <section id="contact" class="contact">
+    <section id="booking" class="booking">
       <div>
-        <p class="eyebrow">COMEÇAR</p>
-        <h2>Cria a tua conta de avaliação.</h2>
-        <p>Recebe detalhes sobre challenges, regras e próximos passos.</p>
+        <p class="eyebrow">Booking</p>
+        <h2>Vamos criar uma galeria com identidade?</h2>
+        <p>Envia a ideia da sessão e recebe uma proposta com disponibilidade, direção visual e próximos passos.</p>
       </div>
       <form id="contactForm">
         <input placeholder="Nome" required />
         <input type="email" placeholder="Email" required />
-        <select><option>$25k Challenge</option><option>$100k Challenge</option><option>$200k Challenge</option></select>
-        <button class="primary" type="submit">Pedir acesso</button>
-        <p id="successMessage" class="success">Pedido recebido. Esta é uma simulação funcional.</p>
+        <select><option>Retrato</option><option>Marca pessoal</option><option>Casamento</option><option>Evento</option><option>Arquitetura/interiores</option></select>
+        <textarea placeholder="Conta-me a ideia da sessão" required></textarea>
+        <button class="primary" type="submit">Pedir proposta</button>
+        <p id="successMessage" class="success">Pedido enviado com sucesso. Esta é uma simulação funcional.</p>
       </form>
     </section>
 
-    <footer>
-      <strong>${brandName}</strong>
-      <p>Disclaimer: trading envolve risco substancial e pode resultar em perdas. Este website é uma simulação de prop firm e não constitui aconselhamento financeiro.</p>
-    </footer>
+    <footer><strong>${brandName}</strong><span>Fotografia com estética editorial, curadoria e entrega digital premium.</span></footer>
   </main>
-
   <script src="script.js"></script>
 </body>
 </html>`,
-    css: `:root { --bg:#050816; --panel:#0b1024; --panel2:#101833; --text:#f8fafc; --muted:#94a3b8; --line:rgba(255,255,255,.1); --green:#22c55e; --cyan:#38bdf8; --violet:#8b5cf6; }
-* { box-sizing: border-box; }
-html { scroll-behavior:smooth; }
-body { margin:0; background: radial-gradient(circle at 20% 0%, rgba(56,189,248,.18), transparent 30%), radial-gradient(circle at 80% 10%, rgba(139,92,246,.22), transparent 32%), var(--bg); color:var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif; }
-button, input, select { font:inherit; }
-.topbar { position:sticky; top:0; z-index:20; display:flex; justify-content:space-between; align-items:center; padding:18px 6vw; background:rgba(5,8,22,.72); backdrop-filter:blur(18px); border-bottom:1px solid var(--line); }
-.brand { display:flex; align-items:center; gap:10px; font-weight:900; letter-spacing:-.04em; font-size:20px; }
-.mark { width:34px; height:34px; display:grid; place-items:center; border-radius:12px; background:linear-gradient(135deg,var(--cyan),var(--violet)); color:white; }
-nav { display:flex; gap:8px; }
-nav button, .ghost { border:1px solid transparent; border-radius:999px; background:transparent; color:var(--muted); padding:10px 14px; cursor:pointer; transition:.2s ease; }
-nav button:hover, .ghost:hover { color:var(--text); border-color:var(--line); background:rgba(255,255,255,.05); }
-.hero { min-height:760px; display:grid; grid-template-columns: .95fr 1.05fr; gap:54px; align-items:center; padding:90px 6vw; }
-.eyebrow { color:var(--cyan); font-size:12px; letter-spacing:.18em; font-weight:900; text-transform:uppercase; }
-h1 { font-size:clamp(52px,7.5vw,104px); line-height:.86; letter-spacing:-.08em; margin:0 0 24px; max-width:850px; }
-h2 { font-size:clamp(34px,5vw,68px); line-height:.92; letter-spacing:-.07em; margin:0; }
-h3 { margin:12px 0 8px; font-size:25px; letter-spacing:-.04em; }
-p, span { color:var(--muted); line-height:1.7; }
-.lead { font-size:20px; max-width:720px; }
-.hero-actions, .actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:28px; }
-.primary, .secondary { border:0; border-radius:999px; padding:15px 24px; font-weight:900; cursor:pointer; transition:.2s ease; }
-.primary { color:#03120b; background:linear-gradient(135deg,#86efac,var(--green)); box-shadow:0 18px 42px rgba(34,197,94,.28); }
-.secondary { color:var(--text); background:rgba(255,255,255,.07); border:1px solid var(--line); }
-.primary:hover, .secondary:hover, .plan:hover, .rules-grid article:hover { transform:translateY(-3px); }
-.trust-row { display:flex; gap:16px; flex-wrap:wrap; margin-top:24px; }
-.trust-row span { color:#cbd5e1; font-size:14px; }
-.terminal-card { border:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03)); border-radius:34px; padding:22px; box-shadow:0 30px 90px rgba(0,0,0,.45); }
-.terminal-head { display:flex; gap:8px; padding:6px 0 18px; }
-.terminal-head span { width:11px; height:11px; border-radius:999px; background:#ef4444; }
-.terminal-head span:nth-child(2) { background:#f59e0b; } .terminal-head span:nth-child(3) { background:#22c55e; }
-.chart-wrap { height:300px; border-radius:26px; background:rgba(2,6,23,.74); border:1px solid var(--line); padding:20px; }
-.area { fill:url(#glow); } .line { fill:none; stroke:var(--green); stroke-width:6; filter:drop-shadow(0 0 18px rgba(34,197,94,.55)); }
-.metric-grid, .stats-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:16px; }
-.metric-grid div, .stats-strip article { background:rgba(255,255,255,.06); border:1px solid var(--line); border-radius:22px; padding:18px; }
-small { color:var(--muted); display:block; margin-bottom:6px; }
-strong { font-size:28px; letter-spacing:-.05em; }
-.green { color:var(--green); }
-.stats-strip { padding:0 6vw 80px; margin-top:0; }
-.stats-strip article strong { display:block; font-size:40px; }
-.section, .dashboard-section, .testimonials, .contact { padding:95px 6vw; }
-.section-head { max-width:760px; margin-bottom:34px; }
-.plans, .rules-grid, .quote-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
-.plan, .rules-grid article, blockquote { position:relative; background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035)); border:1px solid var(--line); border-radius:30px; padding:26px; box-shadow:0 20px 60px rgba(0,0,0,.22); transition:.25s ease; }
-.plan.featured { border-color:rgba(34,197,94,.55); box-shadow:0 24px 80px rgba(34,197,94,.12); }
-.badge { position:absolute; top:18px; right:18px; background:rgba(34,197,94,.14); color:#86efac; border:1px solid rgba(34,197,94,.35); border-radius:999px; padding:8px 12px; font-size:12px; font-weight:900; }
-.plan h3 { font-size:54px; margin:8px 0; }
-.plan strong { display:block; margin:18px 0; }
-.dashboard-section, .rules, .contact { background:rgba(255,255,255,.035); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
-.dashboard { display:grid; grid-template-columns:240px 1fr; gap:20px; background:rgba(255,255,255,.06); border:1px solid var(--line); border-radius:34px; padding:20px; }
-.pill { padding:14px 16px; border-radius:18px; color:var(--muted); margin-bottom:8px; }
-.pill.active { background:rgba(34,197,94,.14); color:#bbf7d0; }
-.dash-main { background:#030712; border:1px solid var(--line); border-radius:26px; padding:24px; }
-.dash-top { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
-.bars { height:260px; display:flex; align-items:end; gap:16px; padding-top:28px; }
-.bars span { flex:1; border-radius:999px 999px 8px 8px; background:linear-gradient(180deg,var(--cyan),var(--violet)); min-height:40px; }
-.rules-grid { grid-template-columns:repeat(4,1fr); }
-.rules-grid span { color:var(--cyan); font-weight:900; }
-.quote-grid { grid-template-columns:repeat(2,1fr); }
-blockquote { margin:0; font-size:22px; line-height:1.5; }
-blockquote span { display:block; margin-top:18px; font-size:14px; }
-.faq-list { display:grid; gap:12px; max-width:900px; }
-.faq-item { text-align:left; border:1px solid var(--line); border-radius:22px; background:rgba(255,255,255,.05); color:var(--text); padding:20px; cursor:pointer; }
-.faq-item span { color:var(--text); font-weight:900; } .faq-item strong { float:right; font-size:18px; } .faq-item p { display:none; margin-bottom:0; } .faq-item.open p { display:block; }
-.contact { display:grid; grid-template-columns:.9fr 1.1fr; gap:40px; align-items:start; }
-form { display:grid; gap:12px; }
-input, select { border:1px solid var(--line); border-radius:18px; padding:16px 18px; background:rgba(255,255,255,.08); color:var(--text); }
-.success { display:none; color:#86efac; font-weight:900; }
-footer { padding:38px 6vw; border-top:1px solid var(--line); display:grid; gap:8px; }
-footer p { font-size:13px; max-width:900px; }
-@media (max-width: 950px) { nav { display:none; } .hero, .dashboard, .contact { grid-template-columns:1fr; } .metric-grid, .stats-strip, .plans, .rules-grid, .quote-grid, .dash-top { grid-template-columns:1fr; } h1 { font-size:56px; } }
-`,
-    js: `document.querySelectorAll('[data-target]').forEach((button) => {
-  button.addEventListener('click', () => {
-    const target = document.getElementById(button.dataset.target);
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-});
-
-document.querySelectorAll('.faq-item').forEach((item) => {
-  item.addEventListener('click', () => item.classList.toggle('open'));
-});
-
-const form = document.getElementById('contactForm');
-const success = document.getElementById('successMessage');
-
-if (form && success) {
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    success.style.display = 'block';
-    form.reset();
-  });
-}`,
+    css: `:root{--bg:#f4efe7;--ink:#17130f;--muted:#766d63;--paper:#fffaf3;--line:rgba(23,19,15,.12);--accent:#9b7046}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Arial,sans-serif}button,input,select,textarea{font:inherit}.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:18px 5vw;background:rgba(244,239,231,.82);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}.brand{font-weight:950;letter-spacing:-.055em;font-size:22px}nav{display:flex;gap:8px}nav button,.nav-cta{border:0;border-radius:999px;background:transparent;color:var(--muted);font-weight:850;padding:10px 14px;cursor:pointer}.nav-cta{background:var(--ink);color:white}.hero{min-height:780px;display:grid;grid-template-columns:.86fr 1.14fr;gap:58px;align-items:center;padding:88px 5vw}.hero-copy{max-width:720px}.eyebrow{color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:.18em;font-weight:950}h1{font-size:clamp(56px,8vw,118px);line-height:.82;letter-spacing:-.09em;margin:0 0 24px}h2{font-size:clamp(38px,5vw,76px);line-height:.9;letter-spacing:-.075em;margin:0}p,span{color:var(--muted);font-size:18px;line-height:1.75}.lead{font-size:20px}.actions{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}.primary,.secondary{border:0;border-radius:999px;padding:15px 24px;font-weight:950;cursor:pointer;transition:.22s}.primary{background:var(--ink);color:white}.secondary{background:var(--paper);color:var(--ink);border:1px solid var(--line)}.primary:hover,.secondary:hover,.cards article:hover{transform:translateY(-3px)}.hero-frame{position:relative;height:640px;border-radius:44px;overflow:hidden;box-shadow:0 34px 90px rgba(23,19,15,.18)}img{width:100%;height:100%;object-fit:cover;display:block}.caption{position:absolute;left:24px;bottom:24px;padding:18px 20px;border-radius:24px;background:rgba(255,250,243,.86);backdrop-filter:blur(14px);display:grid}.caption span{font-size:12px;text-transform:uppercase;letter-spacing:.12em}.caption strong{font-size:24px;letter-spacing:-.05em}.ticker{display:flex;gap:32px;justify-content:center;padding:22px 5vw;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden}.ticker span{font-size:12px;font-weight:950;letter-spacing:.2em;color:var(--ink)}section{padding:92px 5vw}.section-head{max-width:850px;margin-bottom:36px}.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px}.filter{border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);padding:10px 16px;font-weight:850;cursor:pointer}.filter.active{background:var(--ink);color:white}.masonry{columns:3 280px;column-gap:18px}.masonry img{break-inside:avoid;border-radius:30px;margin:0 0 18px;box-shadow:0 22px 60px rgba(23,19,15,.12);transition:.25s}.masonry img:hover{transform:scale(.985);filter:contrast(1.04)}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;background:var(--ink)}.stats article{border:1px solid rgba(255,255,255,.12);border-radius:28px;padding:28px;background:rgba(255,255,255,.06)}.stats strong{display:block;color:white;font-size:48px;letter-spacing:-.06em}.stats span{color:#d6d0c7}.stories{display:grid;grid-template-columns:1fr 1fr;gap:54px;align-items:center;background:var(--paper)}.story-large{height:620px;border-radius:44px;overflow:hidden;box-shadow:0 30px 80px rgba(23,19,15,.15)}blockquote{font-size:28px;line-height:1.42;letter-spacing:-.045em;border-left:4px solid var(--accent);padding-left:24px;color:var(--ink)}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}.cards article{background:var(--paper);border:1px solid var(--line);border-radius:34px;padding:28px;box-shadow:0 20px 60px rgba(23,19,15,.08);transition:.22s}.cards .featured{background:var(--ink);color:white}.cards .featured span,.cards .featured p{color:#d6d0c7}.cards strong{display:block;font-size:30px;margin:22px 0;letter-spacing:-.04em}.cards button{border:0;border-radius:999px;background:var(--accent);color:white;padding:13px 20px;font-weight:900}.booking{display:grid;grid-template-columns:.9fr 1.1fr;gap:44px;background:white}form{display:grid;gap:12px}input,select,textarea{border:1px solid var(--line);border-radius:18px;padding:16px 18px;background:var(--paper);color:var(--ink)}textarea{min-height:140px}.success{display:none;color:#047857;font-weight:900}footer{padding:34px 5vw;display:flex;justify-content:space-between;border-top:1px solid var(--line)}footer strong{letter-spacing:-.04em}@media(max-width:900px){nav{display:none}.hero,.stories,.booking,.cards,.stats{grid-template-columns:1fr}.hero-frame,.story-large{height:420px}h1{font-size:60px}footer{display:grid;gap:8px}}`,
+    js: `document.querySelectorAll('[data-target]').forEach((button)=>{button.addEventListener('click',()=>{const target=document.getElementById(button.dataset.target);if(target)target.scrollIntoView({behavior:'smooth',block:'start'});});});
+document.querySelectorAll('.filter').forEach((button)=>{button.addEventListener('click',()=>{document.querySelectorAll('.filter').forEach((b)=>b.classList.remove('active'));button.classList.add('active');const filter=button.dataset.filter;document.querySelectorAll('.masonry img').forEach((img)=>{img.style.display=filter==='all'||img.dataset.category===filter?'block':'none';});});});
+const form=document.getElementById('contactForm');const success=document.getElementById('successMessage');if(form&&success){form.addEventListener('submit',(event)=>{event.preventDefault();success.style.display='block';form.reset();});}`,
   };
 }
 
-function detectBusiness(prompt: string) {
-  const lower = prompt.toLowerCase();
-
-  if (lower.includes('hotel') || lower.includes('boutique') || lower.includes('alojamento')) {
-    return { title: 'Lúmina Lisboa Hotel', accent: '#9f7aea', soft: '#f6f2ff', eyebrow: 'Hotel boutique minimalista em Lisboa', headline: 'Estadia serena, design discreto e Lisboa à porta', description: 'Um refúgio boutique com quartos luminosos, pequeno-almoço artesanal, terraço privado e concierge local para descobrir a cidade com calma.', services: ['Suites minimalistas', 'Terraço com vista', 'Concierge local'], cta: 'Reservar estadia', image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80' };
-  }
-
-  if (lower.includes('chinês') || lower.includes('chines') || lower.includes('china')) {
-    return { title: 'Dragão Dourado', accent: '#b91c1c', soft: '#fff1f2', eyebrow: 'Restaurante chinês tradicional', headline: 'Sabores chineses autênticos no coração da cidade', description: 'Dim sum, noodles, arroz salteado e pratos clássicos preparados com ingredientes frescos.', services: ['Dim Sum artesanal', 'Noodles frescos', 'Reservas para grupos'], cta: 'Reservar mesa', image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=1000&q=80' };
-  }
-
-  if (lower.includes('italiano') || lower.includes('italiana')) {
-    return { title: 'Bella Mesa', accent: '#dc2626', soft: '#fff7ed', eyebrow: 'Restaurante italiano premium', headline: 'Pasta fresca, forno a lenha e sabores de Itália', description: 'Um restaurante italiano moderno com reservas online, menu sazonal e ambiente acolhedor.', services: ['Pasta fresca', 'Pizza artesanal', 'Carta de vinhos'], cta: 'Reservar agora', image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1000&q=80' };
-  }
-
-  return { title: 'Marca Aurora', accent: '#6366f1', soft: '#eef2ff', eyebrow: 'Experiência digital premium', headline: 'Uma presença online elegante, clara e preparada para converter', description: 'Landing page moderna com storytelling, serviços, prova social, contacto e uma estética cuidada para apresentar a marca com confiança.', services: ['Experiência premium', 'Serviços personalizados', 'Contacto direto'], cta: 'Pedir contacto', image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1000&q=80' };
+function propFirmTemplate(prompt: string): GeneratedProject {
+  const brandName = prompt.toLowerCase().includes('copy') ? 'CopyVault Markets' : 'ApexFunded';
+  return {
+    html: `<!doctype html><html lang="pt"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>${brandName}</title><link rel="stylesheet" href="style.css"/></head><body><header class="topbar"><div class="brand"><span class="mark">A</span>${brandName}</div><nav><button data-target="plans">Challenges</button><button data-target="dashboard">Dashboard</button><button data-target="rules">Regras</button><button data-target="faq">FAQ</button></nav><button class="ghost" data-target="plans">Começar</button></header><main><section class="hero"><div><p class="eyebrow">PROP FIRM • FOREX • FUTURES</p><h1>Capital para traders consistentes.</h1><p class="lead">Plataforma premium para traders que querem provar disciplina, gerir risco e escalar contas simuladas com regras claras.</p><div class="actions"><button class="primary" data-target="plans">Ver challenges</button><button class="secondary" data-target="dashboard">Ver dashboard</button></div></div><div class="terminal"><strong>$127,840</strong><span>Equity simulada</span><div class="bars"><i></i><i></i><i></i><i></i><i></i></div></div></section><section id="plans"><h2>Escolhe a tua conta.</h2><div class="cards"><article><h3>$25k</h3><p>Meta 8% • DD 6%</p><strong>€149</strong></article><article class="featured"><h3>$100k</h3><p>Meta 10% • DD 8%</p><strong>€399</strong></article><article><h3>$200k</h3><p>Meta 10% • DD 10%</p><strong>€799</strong></article></div></section><section id="dashboard"><h2>Dashboard trader.</h2><p>Monitoriza balance, drawdown, payouts e objetivos em tempo real.</p></section><section id="rules"><h2>Regras claras.</h2><div class="cards"><article><h3>Drawdown diário</h3><p>Limite claro para proteger risco.</p></article><article><h3>Sem tempo mínimo</h3><p>Avança ao teu ritmo.</p></article><article><h3>Payout 48h</h3><p>Processamento rápido.</p></article></div></section><section id="faq"><h2>FAQ</h2><button class="faq">Isto é aconselhamento financeiro?<p>Não. Trading envolve risco e esta página é uma simulação.</p></button></section><footer>Disclaimer: trading envolve risco substancial e pode resultar em perdas.</footer></main><script src="script.js"></script></body></html>`,
+    css: `:root{--bg:#050816;--text:#f8fafc;--muted:#94a3b8;--line:rgba(255,255,255,.1);--green:#22c55e;--cyan:#38bdf8}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 20% 0%,rgba(56,189,248,.2),transparent 30%),var(--bg);color:var(--text);font-family:Inter,system-ui,Arial,sans-serif}.topbar{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:18px 6vw;background:rgba(5,8,22,.72);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}.brand{display:flex;gap:10px;font-weight:900}.mark{width:34px;height:34px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(135deg,var(--cyan),var(--green))}nav{display:flex;gap:8px}button{font:inherit}.ghost,nav button{border:1px solid transparent;border-radius:999px;background:transparent;color:var(--muted);padding:10px 14px;cursor:pointer}.hero,section{padding:90px 6vw}.hero{min-height:720px;display:grid;grid-template-columns:.95fr 1.05fr;gap:50px;align-items:center}.eyebrow{color:var(--cyan);font-size:12px;letter-spacing:.18em;font-weight:900}h1{font-size:clamp(52px,7.5vw,104px);line-height:.86;letter-spacing:-.08em;margin:0 0 24px}h2{font-size:clamp(36px,5vw,70px);line-height:.92;letter-spacing:-.07em}.lead{font-size:20px;color:var(--muted);max-width:720px}.actions{display:flex;gap:12px;margin-top:28px}.primary,.secondary{border:0;border-radius:999px;padding:15px 24px;font-weight:900;cursor:pointer}.primary{background:linear-gradient(135deg,#86efac,var(--green));color:#03120b}.secondary{background:rgba(255,255,255,.07);color:white;border:1px solid var(--line)}.terminal,.cards article{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035));border:1px solid var(--line);border-radius:34px;padding:28px;box-shadow:0 30px 90px rgba(0,0,0,.35)}.terminal strong{font-size:56px;display:block}.bars{height:260px;display:flex;align-items:end;gap:14px;margin-top:30px}.bars i{flex:1;border-radius:999px 999px 8px 8px;background:linear-gradient(180deg,var(--cyan),var(--green));height:50%}.bars i:nth-child(2){height:70%}.bars i:nth-child(3){height:42%}.bars i:nth-child(4){height:88%}.bars i:nth-child(5){height:76%}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}.featured{border-color:rgba(34,197,94,.5)!important}.faq{display:block;text-align:left;width:100%;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:22px;color:white;padding:20px}.faq p{display:none;color:var(--muted)}.faq.open p{display:block}footer{padding:38px 6vw;border-top:1px solid var(--line);color:var(--muted)}@media(max-width:900px){nav{display:none}.hero,.cards{grid-template-columns:1fr}h1{font-size:58px}}`,
+    js: `document.querySelectorAll('[data-target]').forEach((button)=>button.addEventListener('click',()=>{const target=document.getElementById(button.dataset.target);if(target)target.scrollIntoView({behavior:'smooth'});}));document.querySelectorAll('.faq').forEach((item)=>item.addEventListener('click',()=>item.classList.toggle('open')));`,
+  };
 }
 
 function fallbackProject(prompt: string): GeneratedProject {
   if (isPropFirmPrompt(prompt)) return propFirmTemplate(prompt);
-
-  const business = detectBusiness(prompt);
-
-  return {
-    html: `<!doctype html><html lang="pt"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>${business.title}</title><link rel="stylesheet" href="style.css" /></head><body><header class="site-header"><strong class="logo">${business.title}</strong><nav><button data-target="home">Início</button><button data-target="services">Serviços</button><button data-target="gallery">Galeria</button><button data-target="contact">Contacto</button></nav></header><main><section id="home" class="hero"><div><p class="eyebrow">${business.eyebrow}</p><h1>${business.headline}</h1><p>${business.description}</p><div class="actions"><button class="primary" data-target="contact">${business.cta}</button><button class="secondary" data-target="services">Ver serviços</button></div></div><img src="${business.image}" alt="${business.title}"/></section><section id="services"><h2>Serviços premium</h2><div class="grid">${business.services.map((service) => `<article><h3>${service}</h3><p>Experiência cuidada, pensada para converter visitantes em clientes.</p></article>`).join('')}</div></section><section id="gallery" class="gallery"><h2>Galeria</h2><div class="gallery-grid"><img src="${business.image}" alt="Galeria"/><img src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=700&q=80" alt="Detalhe"/><img src="https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=700&q=80" alt="Ambiente"/></div></section><section id="contact"><h2>Contacto</h2><form id="contactForm"><input placeholder="Nome" required/><input type="email" placeholder="Email" required/><textarea placeholder="Mensagem" required></textarea><button class="primary" type="submit">Enviar pedido</button><p id="successMessage" class="success">Pedido enviado com sucesso.</p></form></section></main><script src="script.js"></script></body></html>`,
-    css: `:root{--accent:${business.accent};--soft:${business.soft};--text:#111827;--muted:#64748b;--bg:#fbfaf8}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Arial,sans-serif}.site-header{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:18px 7vw;background:rgba(251,250,248,.88);backdrop-filter:blur(16px);border-bottom:1px solid rgba(17,24,39,.08)}.logo{font-weight:900;letter-spacing:-.04em}nav{display:flex;gap:8px}nav button{border:0;border-radius:999px;background:transparent;color:var(--muted);font-weight:800;padding:10px 12px;cursor:pointer}section{padding:86px 7vw}.hero{min-height:680px;display:grid;grid-template-columns:.9fr 1.1fr;gap:54px;align-items:center;background:radial-gradient(circle at top left,var(--soft),transparent 45%)}.hero img,.gallery img{width:100%;height:100%;object-fit:cover;border-radius:34px;box-shadow:0 30px 80px rgba(15,23,42,.16)}.eyebrow{color:var(--accent);font-weight:900;letter-spacing:.14em;text-transform:uppercase;font-size:12px}h1{font-size:clamp(48px,7vw,92px);line-height:.88;letter-spacing:-.075em;margin:0 0 24px}h2{font-size:clamp(34px,5vw,64px);line-height:.95;letter-spacing:-.06em}p{color:var(--muted);font-size:18px;line-height:1.75}.actions{display:flex;gap:12px;margin-top:28px}.primary,.secondary{border:0;border-radius:999px;padding:15px 24px;font-weight:900;cursor:pointer}.primary{background:var(--text);color:white}.secondary{background:white;color:var(--text);border:1px solid rgba(17,24,39,.1)}.grid,.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}article{background:white;border:1px solid rgba(17,24,39,.08);border-radius:30px;padding:26px;box-shadow:0 18px 50px rgba(15,23,42,.07)}.gallery{background:white}.gallery-grid{height:430px}form{display:grid;gap:12px;max-width:620px}input,textarea{border:1px solid rgba(17,24,39,.12);border-radius:18px;padding:16px 18px;font:inherit}.success{display:none;color:#047857;font-weight:900}@media(max-width:900px){.hero,.grid,.gallery-grid{grid-template-columns:1fr;height:auto}nav{display:none}}`,
-    js: `document.querySelectorAll('[data-target]').forEach((button)=>{button.addEventListener('click',()=>{const target=document.getElementById(button.dataset.target);if(target)target.scrollIntoView({behavior:'smooth',block:'start'});});});const form=document.getElementById('contactForm');const success=document.getElementById('successMessage');if(form&&success){form.addEventListener('submit',(event)=>{event.preventDefault();success.style.display='block';form.reset();});}`,
-  };
+  if (isPhotographerPrompt(prompt)) return photographyTemplate(prompt);
+  return photographyTemplate('fotógrafo premium editorial');
 }
 
 function parseProject(text: string, prompt: string): GeneratedProject {
   const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
-  try {
-    const parsed = JSON.parse(cleaned) as Partial<GeneratedProject>;
-    if (parsed.html && parsed.css && parsed.js) return { html: parsed.html, css: parsed.css, js: parsed.js };
-  } catch {}
+  try { const parsed = JSON.parse(cleaned) as Partial<GeneratedProject>; if (parsed.html && parsed.css && parsed.js) return { html: parsed.html, css: parsed.css, js: parsed.js }; } catch {}
   return fallbackProject(prompt);
 }
 
 async function callGemini(model: string, apiKey: string, instruction: string) {
-  return fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: instruction }] }],
-      generationConfig: { temperature: 0.85, maxOutputTokens: 14000, responseMimeType: 'application/json' },
-    }),
-  });
+  return fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: instruction }] }], generationConfig: { temperature: 0.8, maxOutputTokens: 14000, responseMimeType: 'application/json' } }) });
 }
 
 export async function POST(request: NextRequest) {
@@ -337,44 +182,20 @@ export async function POST(request: NextRequest) {
     const { prompt, referenceUrl } = await request.json();
     const cleanPrompt = prompt || 'site moderno';
     const apiKey = process.env.GEMINI_API_KEY;
-
-    if (isPropFirmPrompt(cleanPrompt)) {
-      return NextResponse.json({ project: propFirmTemplate(cleanPrompt), source: 'template', model: 'prop-firm-premium' });
-    }
-
-    if (!apiKey) {
-      return NextResponse.json({ project: fallbackProject(cleanPrompt), source: 'fallback', error: 'GEMINI_API_KEY missing' });
-    }
-
-    const instruction = `Gera um projeto vanilla HTML/CSS/JS completo com qualidade visual premium.
-O utilizador pediu: ${cleanPrompt}
-Link de inspiração opcional: ${referenceUrl || 'nenhum'}
-
-Responde apenas com JSON válido neste formato exato:
-{"html":"conteúdo completo do index.html","css":"conteúdo completo do style.css","js":"conteúdo completo do script.js"}
-
-Regras:
-- HTML em português europeu.
-- O HTML deve referenciar style.css e script.js.
-- Não coloques o prompt bruto dentro da página.
-- Site final de cliente, não demo técnica.
-- Design premium, responsivo, com imagens reais Unsplash, dados fictícios realistas, FAQ, contacto e interações JS.
-- Não uses markdown nem comentários fora do JSON.`;
-
+    if (isPropFirmPrompt(cleanPrompt)) return NextResponse.json({ project: propFirmTemplate(cleanPrompt), source: 'template', model: 'prop-firm-premium' });
+    if (isPhotographerPrompt(cleanPrompt)) return NextResponse.json({ project: photographyTemplate(cleanPrompt), source: 'template', model: 'photography-editorial-premium' });
+    if (!apiKey) return NextResponse.json({ project: fallbackProject(cleanPrompt), source: 'fallback', error: 'GEMINI_API_KEY missing' });
+    const instruction = `Gera um projeto vanilla HTML/CSS/JS premium em português europeu para: ${cleanPrompt}. Referência opcional: ${referenceUrl || 'nenhuma'}. Responde só JSON válido com html, css e js. Não coloques o prompt bruto na página. Usa design premium, responsivo, dados realistas, imagens Unsplash e interações JS.`;
     const errors: string[] = [];
     for (const model of GEMINI_MODELS) {
       const response = await callGemini(model, apiKey, instruction);
-      if (!response.ok) {
-        errors.push(`${model}: ${await response.text()}`);
-        continue;
-      }
+      if (!response.ok) { errors.push(`${model}: ${await response.text()}`); continue; }
       const data = await response.json();
       const text = data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || '').join('\n') || '';
       return NextResponse.json({ project: parseProject(text, cleanPrompt), source: 'gemini', model });
     }
-
-    return NextResponse.json({ project: fallbackProject(cleanPrompt), source: 'fallback', error: errors.join('\n\n') }, { status: 200 });
+    return NextResponse.json({ project: fallbackProject(cleanPrompt), source: 'fallback', error: errors.join('\n\n') });
   } catch (error) {
-    return NextResponse.json({ project: fallbackProject('site moderno'), source: 'fallback', error: String(error) }, { status: 200 });
+    return NextResponse.json({ project: fallbackProject('fotógrafo premium editorial'), source: 'fallback', error: String(error) });
   }
 }
