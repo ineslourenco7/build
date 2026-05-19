@@ -1,7 +1,7 @@
 'use client';
 
 import AppLayout from '@/components/AppLayout';
-import { Code2, Eye, FileCode2, Loader2, Rocket, Sparkles } from 'lucide-react';
+import { AlertTriangle, Code2, Eye, FileCode2, Loader2, Rocket, Sparkles } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 type GeneratedProject = {
@@ -130,12 +130,14 @@ export default function AiBuilderWorkspacePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [source, setSource] = useState<'initial' | 'gemini' | 'fallback'>('initial');
   const [errorMessage, setErrorMessage] = useState('');
+  const [geminiError, setGeminiError] = useState('');
 
   const previewHtml = useMemo(() => buildPreviewDocument(project), [project]);
 
   async function handleGenerate() {
     setIsGenerating(true);
     setErrorMessage('');
+    setGeminiError('');
     setView('preview');
 
     try {
@@ -155,6 +157,7 @@ export default function AiBuilderWorkspacePage() {
       setGeneratedPrompt(prompt);
       setGeneratedReferenceUrl(referenceUrl);
       setSource(data.source === 'gemini' ? 'gemini' : 'fallback');
+      setGeminiError(data.error ? String(data.error) : '');
       setGenerationId((current) => current + 1);
       setLastGeneratedAt(new Date().toLocaleTimeString('pt-PT'));
     } catch (error) {
@@ -213,6 +216,18 @@ export default function AiBuilderWorkspacePage() {
             {lastGeneratedAt && <p className="mt-1">Gerado às {lastGeneratedAt}</p>}
             <p className="mt-1"><strong className="text-foreground">Fonte:</strong> {source}</p>
           </div>
+
+          {geminiError && (
+            <div className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100">
+              <div className="flex items-center gap-2 font-semibold text-amber-200 mb-2">
+                <AlertTriangle size={14} />
+                Gemini error
+              </div>
+              <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed">
+                {geminiError}
+              </pre>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => setView('preview')} className={view === 'preview' ? 'btn-primary' : 'btn-secondary'}>
