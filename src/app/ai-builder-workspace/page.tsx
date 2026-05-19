@@ -30,6 +30,14 @@ function buildPreviewDocument(project: GeneratedProject) {
     : withCss.replace('</body>', `${js}</body>`);
 }
 
+function projectSignature(project: GeneratedProject) {
+  return `${project.html.length}-${project.css.length}-${project.js.length}-${project.html.slice(0, 80)}-${project.css.slice(-80)}-${project.js.slice(-80)}`;
+}
+
+function projectsAreEqual(a: GeneratedProject, b: GeneratedProject) {
+  return a.html === b.html && a.css === b.css && a.js === b.js;
+}
+
 function readFileAsAttachment(file: File): Promise<ChatAttachment> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -59,6 +67,7 @@ export default function AiBuilderWorkspacePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const previewHtml = useMemo(() => buildPreviewDocument(project), [project]);
+  const previewKey = useMemo(() => `${generationId}-${source}-${projectSignature(project)}`, [generationId, source, project]);
 
   async function handleFiles(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files || []);
@@ -88,6 +97,7 @@ export default function AiBuilderWorkspacePage() {
     if ((!cleanMessage && attachments.length === 0) || isWorking || isReadingFiles) return;
     const messageText = cleanMessage || 'Usa os anexos enviados como referência para melhorar o projeto.';
     const sentAttachments = attachments;
+    const currentProjectBeforeRequest = project;
     const nextHistory: ChatMessage[] = [...chatHistory, { role: 'user', content: messageText, attachments: sentAttachments }];
     setChatHistory(nextHistory);
     setMessage('');
@@ -98,7 +108,7 @@ export default function AiBuilderWorkspacePage() {
     setView('preview');
     try {
       const endpoint = hasProject ? '/api/edit-project' : '/api/generate-site';
-      const body = hasProject ? { project, message: messageText, chatHistory: nextHistory, attachments: sentAttachments } : { prompt: messageText, referenceUrl };
+      const body = hasProject ? { project: currentProjectBeforeRequest, message: messageText, chatHistory: nextHistory, attachments: sentAttachments } : { prompt: messageText, referenceUrl };
       if (!hasProject) {
         setProject(emptyProject('A criar o teu website...'));
         setGenerationId((current) => current + 1);
@@ -106,13 +116,25 @@ export default function AiBuilderWorkspacePage() {
       const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await response.json();
       if (!data?.project?.html || !data?.project?.css || !data?.project?.js) throw new Error(data?.error || 'A IA não devolveu os ficheiros esperados.');
-      setProject(data.project);
+
+      const didChange = !projectsAreEqual(currentProjectBeforeRequest, data.project);
+      setProject({ html: data.project.html, css: data.project.css, js: data.project.js });
       setSource(data.source || (hasProject ? 'gemini-edit' : 'gemini'));
       setGeminiError(data.error ? String(data.error) : '');
       setGenerationId((current) => current + 1);
       setLastGeneratedAt(new Date().toLocaleTimeString('pt-PT'));
       setHasProject(true);
-      setChatHistory([...nextHistory, { role: 'assistant', content: hasProject ? 'Alteração aplicada. Podes continuar a pedir ajustes.' : 'Projeto inicial criado. Agora podes continuar a conversa e pedir alterações.' }]);
+      setChatHistory([
+        ...nextHistory,
+        {
+          role: 'assistant',
+          content: didChange
+            ? hasProject
+              ? 'Alteração aplicada e preview atualizado. Podes continuar a pedir ajustes.'
+              : 'Projeto inicial criado. Agora podes continuar a conversa e pedir alterações.'
+            : 'Recebi a resposta, mas o projeto veio igual ao anterior. Tenta pedir uma alteração mais específica, por exemplo: “muda o fundo para preto”, “adiciona uma secção booking” ou “troca as imagens da galeria”.',
+        },
+      ]);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Erro ao processar pedido.');
       setChatHistory([...nextHistory, { role: 'assistant', content: 'Não consegui aplicar o pedido. Vê o erro abaixo e tenta novamente.' }]);
@@ -195,7 +217,7 @@ export default function AiBuilderWorkspacePage() {
             </div>
           </div>
           {view === 'preview' ? (
-            <iframe key={`${generationId}-${source}`} title="Live website preview" srcDoc={previewHtml} sandbox="allow-scripts allow-forms allow-same-origin" className="w-full flex-1 rounded-2xl bg-white border border-border" />
+            <iframe key={previewKey} title="Live website preview" srcDoc={previewHtml} sandbox="allow-scripts allow-forms allow-same-origin" className="w-full flex-1 rounded-2xl bg-white border border-border" />
           ) : (
             <div className="w-full flex-1 rounded-2xl border border-border bg-black/40 overflow-hidden flex flex-col">
               <div className="border-b border-border px-4 py-2 text-xs text-muted-foreground flex items-center gap-2"><FileCode2 size={14} />{currentFilename}</div>
