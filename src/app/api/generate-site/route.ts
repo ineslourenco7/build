@@ -213,8 +213,8 @@ async function callGemini(model: string, apiKey: string, instruction: string) {
       body: JSON.stringify({
         contents: [{ parts: [{ text: instruction }] }],
         generationConfig: {
-          temperature: 0.8,
-          maxOutputTokens: 12000,
+          temperature: 0.85,
+          maxOutputTokens: 14000,
           responseMimeType: 'application/json',
         },
       }),
@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ project: fallbackProject(cleanPrompt), source: 'fallback', error: 'GEMINI_API_KEY missing' });
     }
 
-    const instruction = `Gera um projeto vanilla HTML/CSS/JS completo e com aparência realista de produto final.
+    const instruction = `Gera um projeto vanilla HTML/CSS/JS completo com qualidade visual premium.
 O utilizador pediu: ${cleanPrompt}
 Link de inspiração opcional: ${referenceUrl || 'nenhum'}
 
@@ -243,22 +243,44 @@ Responde apenas com JSON válido neste formato exato:
   "js": "conteúdo completo do script.js"
 }
 
+OBJETIVO VISUAL:
+O resultado deve parecer uma landing page premium criada por um bom designer frontend, pronta para mostrar a um cliente. Evita aparência básica, genérica, académica ou de template antigo.
+
 Regras obrigatórias:
 - O HTML deve referenciar <link rel="stylesheet" href="style.css"> e <script src="script.js"></script>.
 - O site deve estar em português europeu.
 - Respeita exatamente o tipo de negócio pedido. Se o utilizador pedir chinês, cria restaurante chinês; se pedir italiano, cria italiano; não troques o nicho.
-- O site gerado deve parecer um site real pronto a apresentar a um cliente, não uma demo técnica.
-- Cria dados fictícios realistas e específicos para o negócio: nome de marca, morada, horário, telefone, email, preços, estatísticas, menus/produtos/serviços, equipa ou chef/fundador, avaliações de clientes, perguntas frequentes e chamadas à ação.
-- Inclui várias páginas/secções: Início, Serviços/Menu, Galeria/Portfólio, Sobre, Testemunhos, Preços/Planos, FAQ e Contacto.
-- Inclui imagens realistas nas várias secções usando URLs públicas de Unsplash Source ou imagens diretas Unsplash com query adequada ao nicho. Usa alt text descritivo.
-- Não uses imagens quebradas. Usa URLs com https://images.unsplash.com/ ou https://source.unsplash.com/.
-- Todos os botões e navegação devem funcionar com JavaScript vanilla: scroll para secções, tabs, acordeão FAQ, formulário com mensagem de sucesso, botões de filtro se fizer sentido.
-- O formulário deve mostrar uma mensagem de sucesso sem backend.
-- Design moderno, responsivo e visualmente forte: hero com imagem, cards, galeria, microinterações, sombras, espaçamento consistente, mobile-first, boa tipografia e paleta adaptada ao negócio.
 - Não escrevas que é um site para gerar sites. O site gerado deve parecer o site final do negócio.
+
+DIREÇÃO DE DESIGN PREMIUM:
+- Usa uma estrutura visual forte: header sticky elegante, hero editorial split-screen ou fullscreen, imagem grande, badge, título curto e memorável, subtítulo claro e CTA principal/secundário.
+- Usa no máximo 2 fontes fallback: system-ui, Inter, Arial, Helvetica. Cria hierarquia com peso, tamanho, letter-spacing e line-height, não com fontes estranhas.
+- Usa uma paleta sofisticada adaptada ao nicho: fundo claro premium ou dark premium, uma cor principal, uma cor secundária suave e tons neutros. Evita cores primárias demasiado básicas.
+- Usa CSS moderno: CSS variables, clamp(), grid, flex, border-radius 20-32px, sombras suaves, glassmorphism leve se fizer sentido, gradientes subtis, overlays sobre imagens.
+- Layout com bom espaçamento: max-width centralizado, secções com padding generoso, cards alinhados, imagens consistentes, sem blocos de texto enormes.
+- Cria pelo menos uma secção visual diferenciadora: galeria masonry, cards com imagens, menu em tabs, timeline, stats strip, pricing cards, testemunhos em cards, FAQ accordion.
+- Adiciona microinterações: hover states, active states, transitions, animação suave de entrada com CSS, botões com feedback.
+- Mobile responsivo: navegação compacta, grids a 1 coluna, imagens adaptáveis, texto legível.
+
+CONTEÚDO REALISTA:
+- Cria dados fictícios realistas e específicos para o negócio: nome de marca, morada, horário, telefone, email, preços, estatísticas, menus/produtos/serviços, equipa ou chef/fundador, avaliações de clientes, perguntas frequentes e chamadas à ação.
+- Inclui várias secções: Início, Serviços/Menu, Galeria/Portfólio, Sobre, Testemunhos, Preços/Planos, FAQ e Contacto.
+- O conteúdo deve parecer escrito para vender o negócio, não apenas descrever secções.
+
+IMAGENS:
+- Inclui imagens realistas nas várias secções usando URLs públicas diretas de Unsplash.
+- Usa URLs no formato https://images.unsplash.com/... com parâmetros ?auto=format&fit=crop&w=...&q=80.
+- Usa alt text descritivo.
+- Não uses imagens quebradas, placeholders cinzentos, emojis como substitutos de imagens ou URLs inventadas.
+
+INTERATIVIDADE JS:
+- Todos os botões e navegação devem funcionar com JavaScript vanilla: scroll para secções, tabs de menu/serviços, acordeão FAQ, formulário com mensagem de sucesso, filtros se fizer sentido.
+- O formulário deve mostrar uma mensagem de sucesso sem backend.
+- O JavaScript deve ser robusto e não dar erro se um elemento não existir.
+
+LIMITAÇÕES:
 - Não copies texto, imagens, marcas ou código de sites existentes. Usa link só como inspiração estrutural.
 - Não uses bibliotecas externas obrigatórias.
-- Usa fontes seguras como Arial, Inter fallback, system-ui ou Helvetica.
 - Não incluas markdown, comentários fora do JSON, nem blocos de código.`;
 
     const errors: string[] = [];
