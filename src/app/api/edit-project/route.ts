@@ -6,6 +6,13 @@ type GeneratedProject = {
   js: string;
 };
 
+type ChatAttachment = {
+  name: string;
+  type: string;
+  size: number;
+  dataUrl?: string;
+};
+
 const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash-lite'];
 
 function fallbackEdit(project: GeneratedProject, message: string): GeneratedProject {
@@ -32,12 +39,34 @@ function parseProject(text: string, currentProject: GeneratedProject, message: s
   return fallbackEdit(currentProject, message);
 }
 
-async function callGemini(model: string, apiKey: string, instruction: string) {
+function attachmentSummary(attachments: ChatAttachment[]) {
+  if (!attachments?.length) return 'Nenhum anexo.';
+  return attachments.map((file) => `- ${file.name} (${file.type || 'tipo desconhecido'}, ${Math.round((file.size || 0) / 1024)}KB)`).join('\n');
+}
+
+function inlineImageParts(attachments: ChatAttachment[]) {
+  return (attachments || [])
+    .filter((file) => file.type?.startsWith('image/') && file.dataUrl?.includes(','))
+    .slice(0, 4)
+    .map((file) => {
+      const base64 = file.dataUrl?.split(',')[1] || '';
+      return {
+        inlineData: {
+          mimeType: file.type,
+          data: base64,
+        },
+      };
+    });
+}
+
+async function callGemini(model: string, apiKey: string, instruction: string, attachments: ChatAttachment[]) {
+  const parts = [{ text: instruction }, ...inlineImageParts(attachments)];
+
   return fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: instruction }] }],
+      contents: [{ parts }],
       generationConfig: {
         temperature: 0.45,
         maxOutputTokens: 14000,
@@ -49,7 +78,7 @@ async function callGemini(model: string, apiKey: string, instruction: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { project, message, chatHistory } = await request.json();
+    const { project, message, chatHistory, attachments = [] } = await request.json();
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!project?.html || !project?.css || !project?.js) {
@@ -70,6 +99,13 @@ O utilizador pediu uma alteração incremental.
 
 ALTERAÇÃO PEDIDA:
 ${message}
+
+ANEXOS DO UTILIZADOR:
+${attachmentSummary(attachments)}
+
+Se forem enviadas imagens, usa-as como referência visual: estilo, cores, composição, logotipo, produtos ou fotografias do cliente.
+Se o utilizador pedir para usar as imagens no site, podes inserir a própria imagem como data URL no HTML apenas quando fizer sentido. Caso contrário, usa-as como referência de design.
+Para PDFs/docs, considera apenas o nome/tipo como contexto nesta versão.
 
 HISTÓRICO RESUMIDO DO CHAT:
 ${JSON.stringify(chatHistory || []).slice(0, 6000)}
@@ -103,7 +139,7 @@ TAREFA:
     const errors: string[] = [];
 
     for (const model of GEMINI_MODELS) {
-      const response = await callGemini(model, apiKey, instruction);
+      const response = await callGemini(model, apiKey, instruction, attachments);
 
       if (!response.ok) {
         errors.push(`${model}: ${await response.text()}`);
