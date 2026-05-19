@@ -17,6 +17,10 @@ function emptyProject(message = 'Pronto para criar um novo projeto'): GeneratedP
   };
 }
 
+function cloneProject(project: GeneratedProject): GeneratedProject {
+  return { html: project.html, css: project.css, js: project.js };
+}
+
 function buildPreviewDocument(project: GeneratedProject) {
   const css = `<style>${project.css}</style>`;
   const safeJs = project.js.replace(/<\/script>/g, '<\\/script>');
@@ -31,7 +35,7 @@ function buildPreviewDocument(project: GeneratedProject) {
 }
 
 function projectSignature(project: GeneratedProject) {
-  return `${project.html.length}-${project.css.length}-${project.js.length}-${project.html.slice(0, 80)}-${project.css.slice(-80)}-${project.js.slice(-80)}`;
+  return `${project.html.length}-${project.css.length}-${project.js.length}-${project.html.slice(0, 120)}-${project.css.slice(-120)}-${project.js.slice(-120)}`;
 }
 
 function projectsAreEqual(a: GeneratedProject, b: GeneratedProject) {
@@ -48,23 +52,43 @@ function readFileAsAttachment(file: File): Promise<ChatAttachment> {
 }
 
 export default function AiBuilderWorkspacePage() {
+  const initialProject = emptyProject();
   const [message, setMessage] = useState('faz um portfolio premium para uma fotografa de casamentos em lisboa');
   const [referenceUrl, setReferenceUrl] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
     { role: 'assistant', content: 'Diz-me que site queres criar. Depois podes continuar a conversa: mudar cores, trocar imagens, adicionar booking, melhorar secções, anexar fotos ou pedir ajustes específicos.' },
   ]);
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
-  const [project, setProject] = useState<GeneratedProject>(() => emptyProject());
+  const [project, setProjectState] = useState<GeneratedProject>(() => initialProject);
+  const projectRef = useRef<GeneratedProject>(initialProject);
   const [view, setView] = useState<ViewMode>('preview');
   const [lastGeneratedAt, setLastGeneratedAt] = useState('');
   const [generationId, setGenerationId] = useState(0);
+  const generationRef = useRef(0);
   const [isWorking, setIsWorking] = useState(false);
   const [isReadingFiles, setIsReadingFiles] = useState(false);
   const [source, setSource] = useState<'initial' | 'gemini' | 'fallback' | 'template' | 'gemini-edit'>('initial');
   const [errorMessage, setErrorMessage] = useState('');
   const [geminiError, setGeminiError] = useState('');
-  const [hasProject, setHasProject] = useState(false);
+  const [hasProject, setHasProjectState] = useState(false);
+  const hasProjectRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  function syncProject(nextProject: GeneratedProject) {
+    const cloned = cloneProject(nextProject);
+    projectRef.current = cloned;
+    setProjectState(cloned);
+  }
+
+  function bumpGeneration() {
+    generationRef.current += 1;
+    setGenerationId(generationRef.current);
+  }
+
+  function syncHasProject(nextValue: boolean) {
+    hasProjectRef.current = nextValue;
+    setHasProjectState(nextValue);
+  }
 
   const previewHtml = useMemo(() => buildPreviewDocument(project), [project]);
   const previewKey = useMemo(() => `${generationId}-${source}-${projectSignature(project)}`, [generationId, source, project]);
@@ -95,10 +119,13 @@ export default function AiBuilderWorkspacePage() {
   async function handleSend() {
     const cleanMessage = message.trim();
     if ((!cleanMessage && attachments.length === 0) || isWorking || isReadingFiles) return;
+
     const messageText = cleanMessage || 'Usa os anexos enviados como referência para melhorar o projeto.';
     const sentAttachments = attachments;
-    const currentProjectBeforeRequest = project;
+    const latestProject = cloneProject(projectRef.current);
+    const currentlyHasProject = hasProjectRef.current;
     const nextHistory: ChatMessage[] = [...chatHistory, { role: 'user', content: messageText, attachments: sentAttachments }];
+
     setChatHistory(nextHistory);
     setMessage('');
     setAttachments([]);
@@ -106,30 +133,45 @@ export default function AiBuilderWorkspacePage() {
     setErrorMessage('');
     setGeminiError('');
     setView('preview');
-    try {
-      const endpoint = hasProject ? '/api/edit-project' : '/api/generate-site';
-      const body = hasProject ? { project: currentProjectBeforeRequest, message: messageText, chatHistory: nextHistory, attachments: sentAttachments } : { prompt: messageText, referenceUrl };
-      if (!hasProject) {
-        setProject(emptyProject('A criar o teu website...'));
-        setGenerationId((current) => current + 1);
-      }
-      const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      const data = await response.json();
-      if (!data?.project?.html || !data?.project?.css || !data?.project?.js) throw new Error(data?.error || 'A IA não devolveu os ficheiros esperados.');
 
-      const didChange = !projectsAreEqual(currentProjectBeforeRequest, data.project);
-      setProject({ html: data.project.html, css: data.project.css, js: data.project.js });
-      setSource(data.source || (hasProject ? 'gemini-edit' : 'gemini'));
+    try {
+      const endpoint = currentlyHasProject ? '/api/edit-project' : '/api/generate-site';
+      const body = currentlyHasProject
+        ? { project: latestProject, message: messageText, chatHistory: nextHistory, attachments: sentAttachments }
+        : { prompt: messageText, referenceUrl };
+
+      if (!currentlyHasProject) {
+        syncProject(emptyProject('A criar o teu website...'));
+        bumpGeneration();
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        cache: 'no-store',
+      });
+      const data = await response.json();
+
+      if (!data?.project?.html || !data?.project?.css || !data?.project?.js) {
+        throw new Error(data?.error || 'A IA não devolveu os ficheiros esperados.');
+      }
+
+      const nextProject = cloneProject(data.project);
+      const didChange = !projectsAreEqual(latestProject, nextProject) || !currentlyHasProject;
+
+      syncProject(nextProject);
+      setSource(data.source || (currentlyHasProject ? 'gemini-edit' : 'gemini'));
       setGeminiError(data.error ? String(data.error) : '');
-      setGenerationId((current) => current + 1);
+      bumpGeneration();
       setLastGeneratedAt(new Date().toLocaleTimeString('pt-PT'));
-      setHasProject(true);
+      syncHasProject(true);
       setChatHistory([
         ...nextHistory,
         {
           role: 'assistant',
           content: didChange
-            ? hasProject
+            ? currentlyHasProject
               ? 'Alteração aplicada e preview atualizado. Podes continuar a pedir ajustes.'
               : 'Projeto inicial criado. Agora podes continuar a conversa e pedir alterações.'
             : 'Recebi a resposta, mas o projeto veio igual ao anterior. Tenta pedir uma alteração mais específica, por exemplo: “muda o fundo para preto”, “adiciona uma secção booking” ou “troca as imagens da galeria”.',
@@ -144,14 +186,15 @@ export default function AiBuilderWorkspacePage() {
   }
 
   function handleReset() {
-    setProject(emptyProject());
-    setHasProject(false);
+    const resetProject = emptyProject();
+    syncProject(resetProject);
+    syncHasProject(false);
     setSource('initial');
     setAttachments([]);
     setGeminiError('');
     setErrorMessage('');
     setLastGeneratedAt('');
-    setGenerationId((current) => current + 1);
+    bumpGeneration();
     setChatHistory([{ role: 'assistant', content: 'Projeto reiniciado. Diz-me o que queres criar.' }]);
   }
 
