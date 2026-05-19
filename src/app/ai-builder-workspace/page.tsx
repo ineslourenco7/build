@@ -12,118 +12,64 @@ type GeneratedProject = {
 
 type ViewMode = 'preview' | 'html' | 'css' | 'js';
 
-function defaultProject(): GeneratedProject {
+function emptyProject(message = 'Pronto para gerar um novo projeto'): GeneratedProject {
   return {
     html: `<!doctype html>
 <html lang="pt">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Café Aurora</title>
+  <title>Preview</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="site-header">
-    <strong class="logo">Café Aurora</strong>
-    <nav>
-      <button data-target="home">Início</button>
-      <button data-target="menu">Menu</button>
-      <button data-target="about">Sobre</button>
-      <button data-target="contact">Contacto</button>
-    </nav>
-  </header>
-
-  <main>
-    <section id="home" class="hero">
-      <p class="eyebrow">Café de especialidade</p>
-      <h1>Um café acolhedor para começar bem o dia.</h1>
-      <p>Preview inicial em HTML/CSS/JS vanilla. Gera um novo projeto para substituir estes ficheiros.</p>
-      <button class="primary" data-target="contact">Reservar mesa</button>
-    </section>
-
-    <section id="menu">
-      <h2>Menu</h2>
-      <div class="grid">
-        <article><h3>Espresso</h3><p>Café intenso e aromático.</p></article>
-        <article><h3>Brunch</h3><p>Opções frescas todos os dias.</p></article>
-        <article><h3>Pastelaria</h3><p>Doces artesanais acabados de fazer.</p></article>
-      </div>
-    </section>
-
-    <section id="about"><h2>Sobre</h2><p>Um espaço criado para encontros, trabalho e bons momentos.</p></section>
-
-    <section id="contact">
-      <h2>Contacto</h2>
-      <form id="contactForm">
-        <input placeholder="Nome" required />
-        <input type="email" placeholder="Email" required />
-        <textarea placeholder="Mensagem" required></textarea>
-        <button class="primary" type="submit">Enviar</button>
-      </form>
-      <p id="successMessage" class="success">Mensagem enviada com sucesso.</p>
-    </section>
+  <main class="empty">
+    <p>BuildAI</p>
+    <h1>${message}</h1>
+    <span>Escreve um prompt e clica em Generate Vanilla Project.</span>
   </main>
-
   <script src="script.js"></script>
 </body>
 </html>`,
-    css: `:root { --accent: #b7791f; --text: #111827; --muted: #64748b; }
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; font-family: Inter, Arial, sans-serif; color: var(--text); background: #fff; }
-.site-header { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 20px 7vw; background: rgba(255,255,255,.92); border-bottom: 1px solid #e5e7eb; backdrop-filter: blur(12px); }
-.logo { color: var(--accent); font-size: 22px; font-weight: 900; }
-nav { display: flex; gap: 12px; }
-nav button { border: 0; background: transparent; color: var(--muted); font-weight: 700; cursor: pointer; }
-section { padding: 76px 7vw; }
-.hero { min-height: 560px; display: grid; align-content: center; background: linear-gradient(135deg, #fff7ed, #ffffff); }
-.eyebrow { color: var(--accent); font-weight: 800; }
-h1 { max-width: 850px; font-size: clamp(42px, 7vw, 78px); line-height: .95; letter-spacing: -.07em; margin: 0 0 20px; }
-h2 { font-size: clamp(30px, 4vw, 48px); letter-spacing: -.05em; }
-p { color: var(--muted); font-size: 18px; line-height: 1.7; }
-.primary { border: 0; border-radius: 14px; background: var(--accent); color: white; padding: 14px 22px; font-weight: 900; cursor: pointer; width: fit-content; }
-.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-article { border: 1px solid #e5e7eb; border-radius: 24px; padding: 28px; background: white; box-shadow: 0 16px 40px rgba(15,23,42,.06); }
-form { display: grid; gap: 12px; max-width: 560px; }
-input, textarea { width: 100%; border: 1px solid #d1d5db; border-radius: 14px; padding: 14px 16px; font: inherit; color: var(--text); }
-textarea { min-height: 120px; }
-.success { display: none; color: #047857; font-weight: 800; }
-@media (max-width: 800px) { .grid { grid-template-columns: 1fr; } nav { display: none; } }`,
-    js: `document.querySelectorAll('[data-target]').forEach((button) => {
-  button.addEventListener('click', () => {
-    const target = document.getElementById(button.dataset.target);
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-});
-
-const form = document.getElementById('contactForm');
-const success = document.getElementById('successMessage');
-
-if (form && success) {
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    success.style.display = 'block';
-    form.reset();
-  });
-}`,
+    css: `body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0f172a; color: white; font-family: Arial, Helvetica, sans-serif; }
+.empty { text-align: center; max-width: 640px; padding: 48px; }
+p { color: #6ee7b7; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; }
+h1 { font-size: clamp(36px, 6vw, 72px); line-height: .95; letter-spacing: -.06em; margin: 0 0 18px; }
+span { color: #94a3b8; font-size: 18px; }`,
+    js: '',
   };
 }
 
 function buildPreviewDocument(project: GeneratedProject) {
   const css = `<style>${project.css}</style>`;
-  const js = `<script>${project.js.replace(/<\/script>/g, '<\\/script>')}</script>`;
+  const safeJs = project.js.replace(/<\/script>/g, '<\\/script>');
+  const guard = `<script>
+    document.addEventListener('click', function(event) {
+      var target = event.target.closest && event.target.closest('a');
+      if (target) {
+        var href = target.getAttribute('href') || '';
+        if (href.startsWith('#')) return;
+        event.preventDefault();
+      }
+    }, true);
+  </script>`;
+  const js = `${guard}<script>${safeJs}</script>`;
 
-  return project.html
-    .replace(/<link[^>]*href=["']style\.css["'][^>]*>/i, css)
-    .replace(/<script[^>]*src=["']script\.js["'][^>]*><\/script>/i, js);
+  const withCss = project.html.match(/<link[^>]*href=["']style\.css["'][^>]*>/i)
+    ? project.html.replace(/<link[^>]*href=["']style\.css["'][^>]*>/i, css)
+    : project.html.replace('</head>', `${css}</head>`);
+
+  return withCss.match(/<script[^>]*src=["']script\.js["'][^>]*><\/script>/i)
+    ? withCss.replace(/<script[^>]*src=["']script\.js["'][^>]*><\/script>/i, js)
+    : withCss.replace('</body>', `${js}</body>`);
 }
 
 export default function AiBuilderWorkspacePage() {
-  const [prompt, setPrompt] = useState('faz um site para um restaurante italiano');
+  const [prompt, setPrompt] = useState('faz um site ultra premium para um hotel boutique minimalista em lisboa');
   const [referenceUrl, setReferenceUrl] = useState('');
-  const [generatedPrompt, setGeneratedPrompt] = useState('preview inicial');
+  const [generatedPrompt, setGeneratedPrompt] = useState('nenhum ainda');
   const [generatedReferenceUrl, setGeneratedReferenceUrl] = useState('');
-  const [project, setProject] = useState<GeneratedProject>(() => defaultProject());
+  const [project, setProject] = useState<GeneratedProject>(() => emptyProject());
   const [view, setView] = useState<ViewMode>('preview');
   const [lastGeneratedAt, setLastGeneratedAt] = useState('');
   const [generationId, setGenerationId] = useState(0);
@@ -139,6 +85,11 @@ export default function AiBuilderWorkspacePage() {
     setErrorMessage('');
     setGeminiError('');
     setView('preview');
+    setSource('initial');
+    setGeneratedPrompt(prompt);
+    setGeneratedReferenceUrl(referenceUrl);
+    setProject(emptyProject('A gerar o teu novo website...'));
+    setGenerationId((current) => current + 1);
 
     try {
       const response = await fetch('/api/generate-site', {
@@ -154,8 +105,6 @@ export default function AiBuilderWorkspacePage() {
       }
 
       setProject(data.project);
-      setGeneratedPrompt(prompt);
-      setGeneratedReferenceUrl(referenceUrl);
       setSource(data.source === 'gemini' ? 'gemini' : 'fallback');
       setGeminiError(data.error ? String(data.error) : '');
       setGenerationId((current) => current + 1);
@@ -188,7 +137,7 @@ export default function AiBuilderWorkspacePage() {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             className="w-full min-h-32 resize-none mb-4 rounded-lg border border-border bg-[#0f172a] px-3 py-3 text-sm text-white placeholder:text-slate-400 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-            placeholder="Ex: faz um site para um restaurante italiano"
+            placeholder="Ex: faz um site premium para um hotel boutique em Lisboa"
           />
 
           <label className="text-sm font-medium text-foreground mb-2 block">Link de inspiração opcional</label>
@@ -247,7 +196,13 @@ export default function AiBuilderWorkspacePage() {
 
         <main className="bg-background p-4 overflow-hidden">
           {view === 'preview' ? (
-            <iframe key={`${generationId}-${generatedPrompt}-${generatedReferenceUrl}`} title="Live website preview" srcDoc={previewHtml} className="w-full h-full rounded-2xl bg-white border border-border" />
+            <iframe
+              key={`${generationId}-${generatedPrompt}-${generatedReferenceUrl}`}
+              title="Live website preview"
+              srcDoc={previewHtml}
+              sandbox="allow-scripts allow-forms allow-same-origin"
+              className="w-full h-full rounded-2xl bg-white border border-border"
+            />
           ) : (
             <div className="w-full h-full rounded-2xl border border-border bg-black/40 overflow-hidden flex flex-col">
               <div className="border-b border-border px-4 py-2 text-xs text-muted-foreground flex items-center gap-2">
