@@ -20,7 +20,7 @@ function getSiteConfig(prompt: string, referenceUrl: string): SiteConfig {
   const cleanPrompt = prompt.trim() || 'um negócio local moderno';
   const lower = cleanPrompt.toLowerCase();
   const isCafe = lower.includes('cafe') || lower.includes('café');
-  const isRestaurant = lower.includes('restaurante') || lower.includes('restaurant');
+  const isRestaurant = lower.includes('restaurante') || lower.includes('restaurant') || lower.includes('italiano');
   const isAgency = lower.includes('agência') || lower.includes('agencia') || lower.includes('agency');
   const isGym = lower.includes('ginásio') || lower.includes('ginasio') || lower.includes('gym');
   const hasReference = referenceUrl.trim().length > 0;
@@ -41,7 +41,7 @@ function getSiteConfig(prompt: string, referenceUrl: string): SiteConfig {
   const headline = isCafe
     ? 'Café artesanal, ambiente acolhedor e sabores memoráveis'
     : isRestaurant
-      ? 'Sabores autênticos, reservas simples e experiência memorável'
+      ? 'Sabores italianos autênticos, reservas simples e experiência memorável'
       : isAgency
         ? 'Estratégia, design e websites que fazem marcas crescer'
         : isGym
@@ -51,7 +51,7 @@ function getSiteConfig(prompt: string, referenceUrl: string): SiteConfig {
   const description = isCafe
     ? 'Pequenos-almoços, brunch e café de especialidade no centro da cidade.'
     : isRestaurant
-      ? 'Menu moderno, pratos sazonais e uma presença online preparada para receber reservas.'
+      ? 'Menu italiano moderno, pratos sazonais e uma presença online preparada para receber reservas.'
       : isAgency
         ? 'Uma presença digital clara para apresentar serviços, projetos e captar novos clientes.'
         : isGym
@@ -61,7 +61,7 @@ function getSiteConfig(prompt: string, referenceUrl: string): SiteConfig {
   const services = isCafe
     ? ['Café de especialidade', 'Brunch artesanal', 'Pastelaria fresca']
     : isRestaurant
-      ? ['Menu degustação', 'Reservas online', 'Eventos privados']
+      ? ['Pasta fresca', 'Reservas online', 'Eventos privados']
       : isAgency
         ? ['Branding', 'Web design', 'Marketing digital']
         : isGym
@@ -105,8 +105,8 @@ function buildSite(prompt: string, referenceUrl: string) {
     header { position: sticky; top: 0; z-index: 10; padding: 18px 7vw; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: rgba(255,255,255,.92); backdrop-filter: blur(14px); }
     .logo { font-weight: 900; font-size: 22px; color: ${config.accent}; letter-spacing: -.03em; }
     nav { display: flex; gap: 18px; align-items:center; }
-    nav a { color: #64748b; font-size: 14px; text-decoration:none; font-weight:700; }
-    nav a:hover { color: ${config.accent}; }
+    nav button { color: #64748b; font-size: 14px; text-decoration:none; font-weight:700; background: transparent; border: 0; cursor: pointer; }
+    nav button:hover { color: ${config.accent}; }
     section { padding: 76px 7vw; }
     .hero { min-height: 560px; display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; background: linear-gradient(135deg, ${config.secondary}, #ffffff); }
     .badge { display: inline-flex; padding: 8px 12px; border-radius: 999px; background: white; color: ${config.accent}; font-weight: 800; font-size: 13px; box-shadow: 0 8px 24px rgba(15,23,42,.08); }
@@ -137,7 +137,7 @@ function buildSite(prompt: string, referenceUrl: string) {
 <body>
   <header>
     <div class="logo">${config.businessName}</div>
-    <nav>${config.pages.map((page) => `<a href="#${page.id}">${page.label}</a>`).join('')}</nav>
+    <nav>${config.pages.map((page) => `<button type="button" data-target="${page.id}">${page.label}</button>`).join('')}</nav>
   </header>
 
   <section id="home" class="hero">
@@ -147,8 +147,8 @@ function buildSite(prompt: string, referenceUrl: string) {
       <p>${config.description}</p>
       ${safeReference ? `<p class="muted" style="font-size:14px">Referência usada como inspiração estrutural: ${safeReference}</p>` : ''}
       <div class="actions">
-        <a class="btn primary" href="#contact">${config.cta}</a>
-        <a class="btn secondary" href="#services">${config.secondaryCta}</a>
+        <button class="btn primary" type="button" data-target="contact">${config.cta}</button>
+        <button class="btn secondary" type="button" data-target="services">${config.secondaryCta}</button>
       </div>
     </div>
     <div class="card"><div class="visual">${config.businessName}</div></div>
@@ -158,7 +158,7 @@ function buildSite(prompt: string, referenceUrl: string) {
     <h2>${config.pages[1].label}</h2>
     <p>Uma secção criada automaticamente com base no tipo de negócio pedido.</p>
     <div class="grid">
-      ${config.services.map((service) => `<div class="feature"><h3>${service}</h3><p>Solução pensada para clientes que procuram qualidade, rapidez e confiança.</p><a class="btn secondary" href="#contact">Saber mais</a></div>`).join('')}
+      ${config.services.map((service) => `<div class="feature"><h3>${service}</h3><p>Solução pensada para clientes que procuram qualidade, rapidez e confiança.</p><button class="btn secondary" type="button" data-target="contact">Saber mais</button></div>`).join('')}
     </div>
   </section>
 
@@ -170,9 +170,9 @@ function buildSite(prompt: string, referenceUrl: string) {
   <section id="pricing">
     <h2>Preços</h2>
     <div class="grid">
-      <div class="price"><h3>Starter</h3><p class="muted">Ideal para começar.</p><h2>€29</h2><a class="btn secondary" href="#contact">Escolher</a></div>
-      <div class="price featured"><h3>Pro</h3><p class="muted">Mais popular.</p><h2>€79</h2><a class="btn primary" href="#contact">Escolher Pro</a></div>
-      <div class="price"><h3>Premium</h3><p class="muted">Para equipas e marcas.</p><h2>€149</h2><a class="btn secondary" href="#contact">Falar connosco</a></div>
+      <div class="price"><h3>Starter</h3><p class="muted">Ideal para começar.</p><h2>€29</h2><button class="btn secondary" type="button" data-target="contact">Escolher</button></div>
+      <div class="price featured"><h3>Pro</h3><p class="muted">Mais popular.</p><h2>€79</h2><button class="btn primary" type="button" data-target="contact">Escolher Pro</button></div>
+      <div class="price"><h3>Premium</h3><p class="muted">Para equipas e marcas.</p><h2>€149</h2><button class="btn secondary" type="button" data-target="contact">Falar connosco</button></div>
     </div>
   </section>
 
@@ -189,6 +189,15 @@ function buildSite(prompt: string, referenceUrl: string) {
   </section>
 
   <footer>© ${new Date().getFullYear()} ${config.businessName}. Site gerado automaticamente.</footer>
+
+  <script>
+    document.querySelectorAll('[data-target]').forEach(function(button) {
+      button.addEventListener('click', function() {
+        var target = document.getElementById(button.getAttribute('data-target'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  </script>
 </body>
 </html>`;
 }
@@ -200,6 +209,7 @@ export default function AiBuilderWorkspacePage() {
   const [generatedReferenceUrl, setGeneratedReferenceUrl] = useState('');
   const [view, setView] = useState<'preview' | 'code'>('preview');
   const [lastGeneratedAt, setLastGeneratedAt] = useState('');
+  const [generationId, setGenerationId] = useState(0);
 
   const html = useMemo(
     () => buildSite(generatedPrompt, generatedReferenceUrl),
@@ -209,6 +219,7 @@ export default function AiBuilderWorkspacePage() {
   function handleGenerate() {
     setGeneratedPrompt(prompt);
     setGeneratedReferenceUrl(referenceUrl);
+    setGenerationId((current) => current + 1);
     setView('preview');
     setLastGeneratedAt(new Date().toLocaleTimeString('pt-PT'));
   }
@@ -265,7 +276,7 @@ export default function AiBuilderWorkspacePage() {
 
         <main className="bg-background p-4 overflow-hidden">
           {view === 'preview' ? (
-            <iframe key={html} title="Live website preview" srcDoc={html} className="w-full h-full rounded-2xl bg-white border border-border" />
+            <iframe key={`${generationId}-${generatedPrompt}-${generatedReferenceUrl}`} title="Live website preview" srcDoc={html} className="w-full h-full rounded-2xl bg-white border border-border" />
           ) : (
             <pre className="w-full h-full overflow-auto rounded-2xl border border-border bg-black/40 p-4 text-xs text-foreground whitespace-pre-wrap">
               {html}
