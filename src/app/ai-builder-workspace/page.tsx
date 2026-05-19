@@ -1,12 +1,13 @@
 'use client';
 
 import AppLayout from '@/components/AppLayout';
-import { AlertTriangle, Code2, Eye, FileCode2, Loader2, Send, Sparkles } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { AlertTriangle, Code2, Eye, FileCode2, ImageIcon, Loader2, Paperclip, Send, Sparkles, X } from 'lucide-react';
+import { ChangeEvent, useMemo, useRef, useState } from 'react';
 
 type GeneratedProject = { html: string; css: string; js: string };
 type ViewMode = 'preview' | 'html' | 'css' | 'js';
-type ChatMessage = { role: 'user' | 'assistant'; content: string };
+type ChatAttachment = { name: string; type: string; size: number; dataUrl?: string };
+type ChatMessage = { role: 'user' | 'assistant'; content: string; attachments?: ChatAttachment[] };
 
 function emptyProject(message = 'Pronto para criar um novo projeto'): GeneratedProject {
   return {
@@ -29,31 +30,71 @@ function buildPreviewDocument(project: GeneratedProject) {
     : withCss.replace('</body>', `${js}</body>`);
 }
 
+function readFileAsAttachment(file: File): Promise<ChatAttachment> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve({ name: file.name, type: file.type, size: file.size, dataUrl: typeof reader.result === 'string' ? reader.result : undefined });
+    reader.onerror = () => reject(new Error(`Não consegui ler ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function AiBuilderWorkspacePage() {
   const [message, setMessage] = useState('faz um portfolio premium para uma fotografa de casamentos em lisboa');
   const [referenceUrl, setReferenceUrl] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([
     { role: 'assistant', content: 'Diz-me que site queres criar. Depois podes pedir alterações como num chat: mudar cores, trocar imagens, adicionar secções, simplificar o hero, etc.' },
   ]);
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [project, setProject] = useState<GeneratedProject>(() => emptyProject());
   const [view, setView] = useState<ViewMode>('preview');
   const [lastGeneratedAt, setLastGeneratedAt] = useState('');
   const [generationId, setGenerationId] = useState(0);
   const [isWorking, setIsWorking] = useState(false);
+  const [isReadingFiles, setIsReadingFiles] = useState(false);
   const [source, setSource] = useState<'initial' | 'gemini' | 'fallback' | 'template' | 'gemini-edit'>('initial');
   const [errorMessage, setErrorMessage] = useState('');
   const [geminiError, setGeminiError] = useState('');
   const [hasProject, setHasProject] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const previewHtml = useMemo(() => buildPreviewDocument(project), [project]);
 
+  async function handleFiles(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    setIsReadingFiles(true);
+    setErrorMessage('');
+
+    try {
+      const accepted = files.slice(0, 6).filter((file) => file.size <= 4 * 1024 * 1024);
+      const rejected = files.filter((file) => file.size > 4 * 1024 * 1024);
+      const nextAttachments = await Promise.all(accepted.map(readFileAsAttachment));
+      setAttachments((current) => [...current, ...nextAttachments].slice(0, 8));
+      if (rejected.length) setErrorMessage('Alguns ficheiros foram ignorados porque têm mais de 4MB.');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Erro ao carregar ficheiros.');
+    } finally {
+      setIsReadingFiles(false);
+      event.target.value = '';
+    }
+  }
+
+  function removeAttachment(index: number) {
+    setAttachments((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  }
+
   async function handleSend() {
     const cleanMessage = message.trim();
-    if (!cleanMessage || isWorking) return;
+    if ((!cleanMessage && attachments.length === 0) || isWorking || isReadingFiles) return;
 
-    const nextHistory: ChatMessage[] = [...chatHistory, { role: 'user', content: cleanMessage }];
+    const messageText = cleanMessage || 'Usa os anexos enviados como referência para melhorar o projeto.';
+    const sentAttachments = attachments;
+    const nextHistory: ChatMessage[] = [...chatHistory, { role: 'user', content: messageText, attachments: sentAttachments }];
     setChatHistory(nextHistory);
     setMessage('');
+    setAttachments([]);
     setIsWorking(true);
     setErrorMessage('');
     setGeminiError('');
@@ -62,8 +103,8 @@ export default function AiBuilderWorkspacePage() {
     try {
       const endpoint = hasProject ? '/api/edit-project' : '/api/generate-site';
       const body = hasProject
-        ? { project, message: cleanMessage, chatHistory: nextHistory }
-        : { prompt: cleanMessage, referenceUrl };
+        ? { project, message: messageText, chatHistory: nextHistory, attachments: sentAttachments }
+        : { prompt: messageText, referenceUrl };
 
       if (!hasProject) {
         setProject(emptyProject('A criar o teu website...'));
@@ -90,7 +131,7 @@ export default function AiBuilderWorkspacePage() {
       setHasProject(true);
       setChatHistory([
         ...nextHistory,
-        { role: 'assistant', content: hasProject ? 'Alteração aplicada ao projeto atual.' : 'Projeto inicial criado. Agora podes pedir alterações no chat.' },
+        { role: 'assistant', content: hasProject ? 'Alteração aplicada ao projeto atual.' : 'Projeto inicial criado. Agora podes pedir alterações no chat e anexar imagens.' },
       ]);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Erro ao processar pedido.');
@@ -104,6 +145,7 @@ export default function AiBuilderWorkspacePage() {
     setProject(emptyProject());
     setHasProject(false);
     setSource('initial');
+    setAttachments([]);
     setGeminiError('');
     setErrorMessage('');
     setLastGeneratedAt('');
@@ -120,7 +162,7 @@ export default function AiBuilderWorkspacePage() {
         <aside className="border-r border-border bg-card/70 p-5 overflow-hidden flex flex-col">
           <div className="inline-flex items-center gap-2 badge-green mb-4 w-fit"><Sparkles size={14} /> AI Website Chat</div>
           <h1 className="text-2xl font-semibold text-foreground mb-2">Constrói e edita por chat</h1>
-          <p className="text-sm text-muted-foreground mb-4">Primeiro pedido cria o site. Depois cada mensagem altera o projeto atual sem começar do zero.</p>
+          <p className="text-sm text-muted-foreground mb-4">Agora podes anexar imagens/logos ao chat para servirem de referência visual ou assets do site.</p>
 
           <label className="text-sm font-medium text-foreground mb-2 block">Link de inspiração opcional</label>
           <input value={referenceUrl} onChange={(e) => setReferenceUrl(e.target.value)} disabled={hasProject} className="w-full mb-4 rounded-lg border border-border bg-[#0f172a] px-3 py-3 text-sm text-white placeholder:text-slate-400 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-50" placeholder="https://exemplo.com" />
@@ -129,18 +171,25 @@ export default function AiBuilderWorkspacePage() {
             {chatHistory.map((chat, index) => (
               <div key={index} className={chat.role === 'user' ? 'ml-8 rounded-2xl bg-primary/20 border border-primary/30 p-3 text-sm text-foreground' : 'mr-8 rounded-2xl bg-muted/20 border border-border p-3 text-sm text-muted-foreground'}>
                 <div className="text-[10px] uppercase tracking-wider mb-1 opacity-70">{chat.role === 'user' ? 'Tu' : 'AI'}</div>
-                {chat.content}
+                <div>{chat.content}</div>
+                {!!chat.attachments?.length && <div className="mt-2 flex flex-wrap gap-2">{chat.attachments.map((file, fileIndex) => <span key={fileIndex} className="rounded-full bg-background/80 border border-border px-2 py-1 text-[10px]">{file.type?.startsWith('image/') ? 'Imagem' : 'Ficheiro'} · {file.name}</span>)}</div>}
               </div>
             ))}
             {isWorking && <div className="mr-8 rounded-2xl bg-muted/20 border border-border p-3 text-sm text-muted-foreground flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> A trabalhar no projeto...</div>}
           </div>
 
-          <textarea value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSend(); }} className="w-full min-h-24 resize-none mb-3 rounded-lg border border-border bg-[#0f172a] px-3 py-3 text-sm text-white placeholder:text-slate-400 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" placeholder={hasProject ? 'Ex: deixa o hero mais minimalista e troca a paleta para preto e dourado' : 'Ex: faz um portfolio premium para uma fotógrafa de casamentos'} />
+          {!!attachments.length && <div className="mb-3 grid grid-cols-3 gap-2">{attachments.map((file, index) => <div key={`${file.name}-${index}`} className="relative rounded-lg border border-border bg-background/70 p-2 text-xs text-muted-foreground overflow-hidden">{file.type.startsWith('image/') && file.dataUrl ? <img src={file.dataUrl} alt={file.name} className="h-16 w-full rounded-md object-cover mb-1" /> : <div className="h-16 rounded-md bg-muted/20 grid place-items-center mb-1"><FileCode2 size={18} /></div>}<button onClick={() => removeAttachment(index)} className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white"><X size={11} /></button><div className="truncate">{file.name}</div></div>)}</div>}
 
-          <div className="grid grid-cols-[1fr_auto] gap-2 mb-3">
-            <button onClick={handleSend} disabled={isWorking || !message.trim()} className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"><Send size={16} /> {hasProject ? 'Apply Changes' : 'Create Website'}</button>
+          <textarea value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSend(); }} className="w-full min-h-24 resize-none mb-3 rounded-lg border border-border bg-[#0f172a] px-3 py-3 text-sm text-white placeholder:text-slate-400 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" placeholder={hasProject ? 'Ex: usa estas fotos na galeria e deixa o design mais minimalista' : 'Ex: faz um portfolio premium para uma fotógrafa de casamentos'} />
+
+          <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf,.txt,.doc,.docx" onChange={handleFiles} className="hidden" />
+          <div className="grid grid-cols-[auto_1fr_auto] gap-2 mb-3">
+            <button onClick={() => fileInputRef.current?.click()} disabled={isReadingFiles || isWorking} className="btn-secondary px-3 disabled:opacity-60">{isReadingFiles ? <Loader2 size={16} className="animate-spin" /> : <Paperclip size={16} />}</button>
+            <button onClick={handleSend} disabled={isWorking || isReadingFiles || (!message.trim() && attachments.length === 0)} className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"><Send size={16} /> {hasProject ? 'Apply Changes' : 'Create Website'}</button>
             <button onClick={handleReset} className="btn-secondary px-3">Reset</button>
           </div>
+
+          <div className="mb-3 flex items-center gap-2 text-[11px] text-muted-foreground"><ImageIcon size={13} /> Até 8 ficheiros, máx. 4MB cada. Imagens são usadas como referência visual.</div>
 
           {errorMessage && <div className="mb-3 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-200">{errorMessage}</div>}
 
