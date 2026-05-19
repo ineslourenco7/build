@@ -6,7 +6,7 @@ type GeneratedProject = {
   js: string;
 };
 
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash-lite'];
 
 function detectBusiness(prompt: string) {
   const lower = prompt.toLowerCase();
@@ -190,6 +190,24 @@ function parseProject(text: string, prompt: string): GeneratedProject {
   return fallbackProject(prompt);
 }
 
+async function callGemini(model: string, apiKey: string, instruction: string) {
+  return fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: instruction }] }],
+        generationConfig: {
+          temperature: 0.65,
+          maxOutputTokens: 8192,
+          responseMimeType: 'application/json',
+        },
+      }),
+    }
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { prompt, referenceUrl } = await request.json();
@@ -225,35 +243,28 @@ Regras obrigatórias:
 - Usa fontes seguras como Arial, Inter fallback, system-ui ou Helvetica.
 - Não incluas markdown, comentários fora do JSON, nem blocos de código.`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: instruction }] }],
-          generationConfig: {
-            temperature: 0.65,
-            maxOutputTokens: 8192,
-            responseMimeType: 'application/json',
-          },
-        }),
-      }
-    );
+    const errors: string[] = [];
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return NextResponse.json(
-        { project: fallbackProject(cleanPrompt), source: 'fallback', error: errorText },
-        { status: 200 }
-      );
+    for (const model of GEMINI_MODELS) {
+      const response = await callGemini(model, apiKey, instruction);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        errors.push(`${model}: ${errorText}`);
+        continue;
+      }
+
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || '').join('\n') || '';
+      const project = parseProject(text, cleanPrompt);
+
+      return NextResponse.json({ project, source: 'gemini', model });
     }
 
-    const data = await response.json();
-    const text = data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || '').join('\n') || '';
-    const project = parseProject(text, cleanPrompt);
-
-    return NextResponse.json({ project, source: 'gemini' });
+    return NextResponse.json(
+      { project: fallbackProject(cleanPrompt), source: 'fallback', error: errors.join('\n\n') },
+      { status: 200 }
+    );
   } catch (error) {
     return NextResponse.json({ project: fallbackProject('site moderno'), source: 'fallback', error: String(error) }, { status: 200 });
   }
