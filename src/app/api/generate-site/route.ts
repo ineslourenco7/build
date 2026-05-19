@@ -6,6 +6,8 @@ type GeneratedProject = {
   js: string;
 };
 
+const GEMINI_MODEL = 'gemini-2.0-flash';
+
 function detectBusiness(prompt: string) {
   const lower = prompt.toLowerCase();
 
@@ -224,7 +226,7 @@ Regras obrigatórias:
 - Não incluas markdown, comentários fora do JSON, nem blocos de código.`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
