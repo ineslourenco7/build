@@ -129,6 +129,23 @@ TAREFA:
 - Garante que botões, navegação e formulário continuam funcionais.
 - Se o utilizador pedir mudança visual, altera principalmente CSS e só muda HTML se necessário.
 - Se pedir nova secção, adiciona HTML, CSS e JS se necessário.
+
+BOOKING / MARCAÇÕES:
+Se o utilizador pedir marcações, booking, agenda, calendário, disponibilidade, estética, nails, cabeleireiro, barbeiro, spa, clínica, tratamentos ou serviços com reserva, adiciona uma secção de booking funcional.
+Essa secção deve incluir obrigatoriamente:
+- Calendário visual mensal simples em HTML/CSS/JS vanilla.
+- Dias disponíveis e indisponíveis com estilos diferentes.
+- Seleção de dia.
+- Horários disponíveis que mudam conforme o dia selecionado.
+- Seleção de serviço/tipo de serviço com preço e duração, por exemplo Manicure Gel, Nail Art, Corte, Coloração, Limpeza de Pele, Massagem.
+- Campos Nome, Email ou Telefone.
+- Botão Confirmar marcação.
+- Resumo da marcação escolhida.
+- Mensagem de confirmação sem backend.
+- JavaScript robusto para atualizar seleção, impedir submissão sem dia/hora/serviço e mostrar confirmação.
+- Design premium adequado ao nicho, especialmente beleza/estética: cards suaves, calendário elegante, botões claros e mobile friendly.
+Não uses bibliotecas externas nem APIs externas.
+
 - Responde apenas com JSON válido neste formato exato:
 {
   "html": "conteúdo completo atualizado do index.html",
