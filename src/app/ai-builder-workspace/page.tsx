@@ -6,16 +6,27 @@ import { useMemo, useState } from 'react';
 
 function buildSite(prompt: string) {
   const cleanPrompt = prompt.trim() || 'um negócio local moderno';
-  const isCafe = cleanPrompt.toLowerCase().includes('cafe') || cleanPrompt.toLowerCase().includes('café');
-  const businessName = isCafe ? 'Café Aurora' : 'Nova Marca';
-  const accent = isCafe ? '#b7791f' : '#6366f1';
-  const secondary = isCafe ? '#fff7ed' : '#eef2ff';
+  const lower = cleanPrompt.toLowerCase();
+  const isCafe = lower.includes('cafe') || lower.includes('café');
+  const isRestaurant = lower.includes('restaurante') || lower.includes('restaurant');
+  const isAgency = lower.includes('agência') || lower.includes('agencia') || lower.includes('agency');
+  const businessName = isCafe ? 'Café Aurora' : isRestaurant ? 'Bella Mesa' : isAgency ? 'Studio Norte' : 'Nova Marca';
+  const accent = isCafe ? '#b7791f' : isRestaurant ? '#dc2626' : isAgency ? '#7c3aed' : '#6366f1';
+  const secondary = isCafe ? '#fff7ed' : isRestaurant ? '#fff1f2' : isAgency ? '#f5f3ff' : '#eef2ff';
   const headline = isCafe
     ? 'Café artesanal, ambiente acolhedor e sabores memoráveis'
-    : `Website profissional para ${cleanPrompt}`;
+    : isRestaurant
+      ? 'Sabores autênticos, reservas simples e experiência memorável'
+      : isAgency
+        ? 'Estratégia, design e websites que fazem marcas crescer'
+        : `Website profissional para ${cleanPrompt}`;
   const description = isCafe
     ? 'Pequenos-almoços, brunch e café de especialidade no centro da cidade.'
-    : 'Uma presença digital moderna, rápida e pensada para converter visitantes em clientes.';
+    : isRestaurant
+      ? 'Menu moderno, pratos sazonais e uma presença online preparada para receber reservas.'
+      : isAgency
+        ? 'Uma landing page clara para apresentar serviços, projetos e captar novos clientes.'
+        : 'Uma presença digital moderna, rápida e pensada para converter visitantes em clientes.';
 
   return `<!doctype html>
 <html lang="pt">
@@ -58,7 +69,7 @@ function buildSite(prompt: string) {
       <p>${description}</p>
       <div class="actions">
         <button class="btn primary">Reservar agora</button>
-        <button class="btn secondary">Ver menu</button>
+        <button class="btn secondary">Ver detalhes</button>
       </div>
     </div>
     <div class="card"><div class="image">${businessName}</div></div>
@@ -77,8 +88,15 @@ export default function AiBuilderWorkspacePage() {
   const [prompt, setPrompt] = useState('faz um site para um café');
   const [generatedPrompt, setGeneratedPrompt] = useState('faz um site para um café');
   const [view, setView] = useState<'preview' | 'code'>('preview');
+  const [lastGeneratedAt, setLastGeneratedAt] = useState('');
 
   const html = useMemo(() => buildSite(generatedPrompt), [generatedPrompt]);
+
+  function handleGenerate() {
+    setGeneratedPrompt(prompt);
+    setView('preview');
+    setLastGeneratedAt(new Date().toLocaleTimeString('pt-PT'));
+  }
 
   return (
     <AppLayout fullHeight>
@@ -97,14 +115,19 @@ export default function AiBuilderWorkspacePage() {
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            className="input-base min-h-36 resize-none mb-4"
+            className="w-full min-h-36 resize-none mb-4 rounded-lg border border-border bg-[#0f172a] px-3 py-3 text-sm text-white placeholder:text-slate-400 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             placeholder="Ex: faz um site para um café moderno em Lisboa"
           />
 
-          <button onClick={() => setGeneratedPrompt(prompt)} className="btn-primary w-full mb-4">
+          <button onClick={handleGenerate} className="btn-primary w-full mb-3">
             <Rocket size={16} />
             Generate Website
           </button>
+
+          <div className="mb-4 rounded-lg border border-border bg-background/60 p-3 text-xs text-muted-foreground">
+            <p><strong className="text-foreground">Último prompt:</strong> {generatedPrompt}</p>
+            {lastGeneratedAt && <p className="mt-1">Gerado às {lastGeneratedAt}</p>}
+          </div>
 
           <div className="grid grid-cols-2 gap-2">
             <button onClick={() => setView('preview')} className={view === 'preview' ? 'btn-primary' : 'btn-secondary'}>
@@ -118,7 +141,7 @@ export default function AiBuilderWorkspacePage() {
 
         <main className="bg-background p-4 overflow-hidden">
           {view === 'preview' ? (
-            <iframe title="Live website preview" srcDoc={html} className="w-full h-full rounded-2xl bg-white border border-border" />
+            <iframe key={html} title="Live website preview" srcDoc={html} className="w-full h-full rounded-2xl bg-white border border-border" />
           ) : (
             <pre className="w-full h-full overflow-auto rounded-2xl border border-border bg-black/40 p-4 text-xs text-foreground whitespace-pre-wrap">
               {html}
