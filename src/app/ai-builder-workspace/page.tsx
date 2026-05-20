@@ -42,6 +42,17 @@ function projectsAreEqual(a: GeneratedProject, b: GeneratedProject) {
   return a.html === b.html && a.css === b.css && a.js === b.js;
 }
 
+function isFreshGenerationRequest(text: string) {
+  const lower = text.toLowerCase().trim();
+  const createWords = ['faz ', 'cria ', 'gera ', 'constrói ', 'constroi ', 'desenvolve ', 'quero um ', 'quero uma '];
+  const productWords = ['site', 'website', 'landing', 'portfolio', 'portfólio', 'plataforma', 'app ', 'aplicação', 'aplicacao', 'saas', 'prop firm', 'copy trading'];
+  const editWords = ['muda', 'troca', 'altera', 'adiciona', 'remove', 'melhora', 'corrige', 'aumenta', 'diminui', 'mantém', 'mantem'];
+  const looksLikeCreate = createWords.some((word) => lower.startsWith(word) || lower.includes(` ${word}`));
+  const mentionsProduct = productWords.some((word) => lower.includes(word));
+  const looksLikeEdit = editWords.some((word) => lower.startsWith(word));
+  return looksLikeCreate && mentionsProduct && !looksLikeEdit;
+}
+
 function readFileAsAttachment(file: File): Promise<ChatAttachment> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -67,7 +78,7 @@ export default function AiBuilderWorkspacePage() {
   const generationRef = useRef(0);
   const [isWorking, setIsWorking] = useState(false);
   const [isReadingFiles, setIsReadingFiles] = useState(false);
-  const [source, setSource] = useState<'initial' | 'gemini' | 'fallback' | 'template' | 'gemini-edit'>('initial');
+  const [source, setSource] = useState<string>('initial');
   const [errorMessage, setErrorMessage] = useState('');
   const [geminiError, setGeminiError] = useState('');
   const [hasProject, setHasProjectState] = useState(false);
@@ -124,6 +135,7 @@ export default function AiBuilderWorkspacePage() {
     const sentAttachments = attachments;
     const latestProject = cloneProject(projectRef.current);
     const currentlyHasProject = hasProjectRef.current;
+    const shouldCreateFresh = isFreshGenerationRequest(messageText);
     const nextHistory: ChatMessage[] = [...chatHistory, { role: 'user', content: messageText, attachments: sentAttachments }];
 
     setChatHistory(nextHistory);
@@ -135,13 +147,13 @@ export default function AiBuilderWorkspacePage() {
     setView('preview');
 
     try {
-      const endpoint = currentlyHasProject ? '/api/edit-project' : '/api/generate-site';
-      const body = currentlyHasProject
-        ? { project: latestProject, message: messageText, chatHistory: nextHistory, attachments: sentAttachments }
-        : { prompt: messageText, referenceUrl };
+      const endpoint = !currentlyHasProject || shouldCreateFresh ? '/api/generate-site' : '/api/edit-project';
+      const body = endpoint === '/api/generate-site'
+        ? { prompt: messageText, referenceUrl, forceNew: true, timestamp: Date.now() }
+        : { project: latestProject, message: messageText, chatHistory: nextHistory, attachments: sentAttachments };
 
-      if (!currentlyHasProject) {
-        syncProject(emptyProject('A criar o teu website...'));
+      if (endpoint === '/api/generate-site') {
+        syncProject(emptyProject('A criar um novo website...'));
         bumpGeneration();
       }
 
@@ -158,10 +170,10 @@ export default function AiBuilderWorkspacePage() {
       }
 
       const nextProject = cloneProject(data.project);
-      const didChange = !projectsAreEqual(latestProject, nextProject) || !currentlyHasProject;
+      const didChange = !projectsAreEqual(latestProject, nextProject) || endpoint === '/api/generate-site';
 
       syncProject(nextProject);
-      setSource(data.source || (currentlyHasProject ? 'gemini-edit' : 'gemini'));
+      setSource(data.source || (endpoint === '/api/edit-project' ? 'gemini-edit' : 'generated'));
       setGeminiError(data.error ? String(data.error) : '');
       bumpGeneration();
       setLastGeneratedAt(new Date().toLocaleTimeString('pt-PT'));
@@ -171,10 +183,10 @@ export default function AiBuilderWorkspacePage() {
         {
           role: 'assistant',
           content: didChange
-            ? currentlyHasProject
-              ? 'Alteração aplicada e preview atualizado. Podes continuar a pedir ajustes.'
-              : 'Projeto inicial criado. Agora podes continuar a conversa e pedir alterações.'
-            : 'Recebi a resposta, mas o projeto veio igual ao anterior. Tenta pedir uma alteração mais específica, por exemplo: “muda o fundo para preto”, “adiciona uma secção booking” ou “troca as imagens da galeria”.',
+            ? endpoint === '/api/generate-site'
+              ? 'Novo projeto criado do zero. Agora podes continuar a conversa e pedir alterações.'
+              : 'Alteração aplicada e preview atualizado. Podes continuar a pedir ajustes.'
+            : 'Recebi a resposta, mas o projeto veio igual ao anterior. Tenta pedir uma alteração mais específica.',
         },
       ]);
     } catch (error) {
@@ -215,7 +227,7 @@ export default function AiBuilderWorkspacePage() {
               <button onClick={handleReset} className="btn-secondary px-3 shrink-0">Reset</button>
             </div>
             <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
-              <input value={referenceUrl} onChange={(e) => setReferenceUrl(e.target.value)} disabled={hasProject} className="w-full rounded-lg border border-border bg-[#0f172a] px-3 py-2.5 text-sm text-white placeholder:text-slate-400 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-50" placeholder="Link de inspiração opcional" />
+              <input value={referenceUrl} onChange={(e) => setReferenceUrl(e.target.value)} className="w-full rounded-lg border border-border bg-[#0f172a] px-3 py-2.5 text-sm text-white placeholder:text-slate-400 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" placeholder="Link de inspiração opcional" />
               <div className="rounded-lg border border-border bg-background/60 px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">Fonte: <strong className="text-foreground">{source}</strong></div>
             </div>
           </div>
@@ -236,12 +248,12 @@ export default function AiBuilderWorkspacePage() {
           <div className="border-t border-border p-4 bg-card/90 shrink-0">
             {!!attachments.length && <div className="mb-3 grid grid-cols-4 gap-2">{attachments.map((file, index) => <div key={`${file.name}-${index}`} className="relative rounded-lg border border-border bg-background/70 p-2 text-xs text-muted-foreground overflow-hidden">{file.type.startsWith('image/') && file.dataUrl ? <img src={file.dataUrl} alt={file.name} className="h-16 w-full rounded-md object-cover mb-1" /> : <div className="h-16 rounded-md bg-muted/20 grid place-items-center mb-1"><FileCode2 size={18} /></div>}<button onClick={() => removeAttachment(index)} className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white"><X size={11} /></button><div className="truncate">{file.name}</div></div>)}</div>}
 
-            <textarea value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSend(); }} className="w-full min-h-28 max-h-44 resize-y rounded-xl border border-border bg-[#0f172a] px-4 py-3 text-sm text-white placeholder:text-slate-400 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" placeholder={hasProject ? 'Continua a conversa: adiciona booking, muda cores, usa estas fotos, melhora o hero...' : 'Ex: faz um site premium para estética com calendário de marcações'} />
+            <textarea value={message} onChange={(e) => setMessage(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSend(); }} className="w-full min-h-28 max-h-44 resize-y rounded-xl border border-border bg-[#0f172a] px-4 py-3 text-sm text-white placeholder:text-slate-400 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" placeholder={hasProject ? 'Escreve uma alteração OU um novo pedido como: faz um site para...' : 'Ex: faz um site premium para estética com calendário de marcações'} />
 
             <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf,.txt,.doc,.docx" onChange={handleFiles} className="hidden" />
             <div className="mt-3 grid grid-cols-[auto_1fr] gap-2">
               <button onClick={() => fileInputRef.current?.click()} disabled={isReadingFiles || isWorking} className="btn-secondary px-4 disabled:opacity-60">{isReadingFiles ? <Loader2 size={16} className="animate-spin" /> : <Paperclip size={16} />}</button>
-              <button onClick={handleSend} disabled={isWorking || isReadingFiles || (!message.trim() && attachments.length === 0)} className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"><Send size={16} /> {hasProject ? 'Enviar alteração' : 'Criar website'}</button>
+              <button onClick={handleSend} disabled={isWorking || isReadingFiles || (!message.trim() && attachments.length === 0)} className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"><Send size={16} /> {hasProject ? 'Enviar / gerar' : 'Criar website'}</button>
             </div>
             <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground"><ImageIcon size={13} /> Ctrl+Enter envia · até 8 ficheiros, máx. 4MB cada</div>
             {errorMessage && <div className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-200">{errorMessage}</div>}
