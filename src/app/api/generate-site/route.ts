@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { motionCss, motionHtml, motionJs } from '@/lib/motionEngine';
+import { premiumAssetCss, premiumAssetSection } from '@/lib/visualAssetEngine';
 
 type Project = { html: string; css: string; js: string };
 type Palette = { name: string; accent: string; accent2: string; glow: string };
@@ -91,8 +92,8 @@ function contact() {
 function build(prompt: string, referenceUrl = '') {
   const intel = analyze(prompt, referenceUrl);
   const c = copy(intel);
-  const html = `<!doctype html><html lang="pt"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>${c.brand}</title><link rel="stylesheet" href="style.css"/></head><body><div class="noise"></div>${motionHtml()}<header class="nav"><div class="brand"><span>${c.brand[0]}</span>${c.brand}</div><nav><button data-target="product">Produto</button><button data-target="app">Área interna</button><button data-target="pricing">Planos</button><button data-target="contact">Contacto</button></nav><button class="navCta magnetic" data-target="contact">${c.cta}</button></header><main>${hero(intel)}<section class="logos sectionTransition"><span>Trusted by modern teams</span><b>Stripe</b><b>Vercel</b><b>Analytics</b><b>Cloudflare</b></section>${features(intel)}${app(intel)}${pricing()}${contact()}</main><script src="script.js"></script></body></html>`;
-  return { project: { html, css: `${styles(intel.palette[0], intel.layout)}\n${motionCss()}`, js: `${scripts()}\n${motionJs()}` }, intelligence: intel };
+  const html = `<!doctype html><html lang="pt"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>${c.brand}</title><link rel="stylesheet" href="style.css"/></head><body><div class="noise"></div>${motionHtml()}<header class="nav"><div class="brand"><span>${c.brand[0]}</span>${c.brand}</div><nav><button data-target="product">Produto</button><button data-target="showcase">Showcase</button><button data-target="app">Área interna</button><button data-target="pricing">Planos</button><button data-target="contact">Contacto</button></nav><button class="navCta magnetic" data-target="contact">${c.cta}</button></header><main>${hero(intel)}<section class="logos sectionTransition"><span>Trusted by modern teams</span><b>Stripe</b><b>Vercel</b><b>Analytics</b><b>Cloudflare</b></section>${features(intel)}${premiumAssetSection(intel.niche, intel.sub)}${app(intel)}${pricing()}${contact()}</main><script src="script.js"></script></body></html>`;
+  return { project: { html, css: `${styles(intel.palette[0], intel.layout)}\n${premiumAssetCss()}\n${motionCss()}`, js: `${scripts()}\n${motionJs()}` }, intelligence: intel };
 }
 
 function styles(p: Palette, layout: Intel['layout']) {
@@ -109,7 +110,7 @@ function parseProject(text: string, prompt: string, referenceUrl = '') {
   try {
     const cleaned = text.replace(/```json/g, '').replace(/```/g, '').trim();
     const parsed = JSON.parse(cleaned) as Partial<Project>;
-    if (parsed.html && parsed.css && parsed.js) return { project: { html: parsed.html, css: `${parsed.css}\n${motionCss()}`, js: `${parsed.js}\n${motionJs()}` }, intelligence: analyze(prompt, referenceUrl) };
+    if (parsed.html && parsed.css && parsed.js) return { project: { html: parsed.html, css: `${parsed.css}\n${premiumAssetCss()}\n${motionCss()}`, js: `${parsed.js}\n${motionJs()}` }, intelligence: analyze(prompt, referenceUrl) };
   } catch {}
   return build(prompt, referenceUrl);
 }
@@ -131,10 +132,10 @@ export async function POST(request: NextRequest) {
     const safeDirect = has(clean, ['trading', 'forex', 'prop firm', 'propfirm', 'funded', 'copy trading', 'fintech', 'fotografo', 'fotógrafo', 'fotografia', 'photographer', 'nails', 'unhas', 'estética', 'estetica', 'saas', 'software', 'startup', 'automação', 'automacao']);
 
     if (!apiKey || safeDirect) {
-      return NextResponse.json({ ...build(clean, referenceUrl || ''), source: 'motion-design-engine', model: 'motion-v7' });
+      return NextResponse.json({ ...build(clean, referenceUrl || ''), source: 'premium-visual-asset-engine', model: 'visual-assets-v8' });
     }
 
-    const instruction = `Gera um projeto vanilla HTML/CSS/JS premium para: ${clean}. Referência: ${referenceUrl || 'nenhuma'}. Nicho: ${intel.niche}. Subnicho: ${intel.sub}. Usa layout próprio do nicho, motion premium, copy final de cliente, variações de cor clicáveis e navegação funcional. Não mostres texto interno sobre engine, DNA, builder, template, visual system, motion system ou app engine. Responde só JSON válido com html, css e js.`;
+    const instruction = `Gera um projeto vanilla HTML/CSS/JS premium para: ${clean}. Referência: ${referenceUrl || 'nenhuma'}. Nicho: ${intel.niche}. Subnicho: ${intel.sub}. Usa layout próprio do nicho, motion premium, assets visuais premium, copy final de cliente, variações de cor clicáveis e navegação funcional. Não mostres texto interno sobre engine, DNA, builder, template, visual system, motion system ou app engine. Responde só JSON válido com html, css e js.`;
     const errors: string[] = [];
     for (const model of MODELS) {
       const response = await callGemini(model, apiKey, instruction);
