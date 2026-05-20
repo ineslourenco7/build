@@ -30,13 +30,17 @@ function highTicketTemplate(prompt: string): GeneratedProject {
 
   const brand = isCasino ? 'NovaPlay Studio' : isTrading ? 'CopyEdge Capital' : isSaas ? 'Nexora AI' : 'ScaleEdge Labs';
   const eyebrow = isCasino ? 'IGAMING • CASINO • PLAYER EXPERIENCE' : isTrading ? 'TRADING • DATA • AUTOMATION' : isSaas ? 'AI SAAS • AUTOMATION • GROWTH' : 'BUSINESS • STRATEGY • SYSTEMS';
-  const headline = isCasino ? 'Uma experiência igaming premium, rápida e viciante.' : isTrading ? 'Infraestrutura premium para traders, sinais e capital.' : isSaas ? 'Software com estética de produto global.' : 'Sistemas digitais para negócios que querem escalar.';
-  const sub = isCasino ? 'Landing page dark premium para casino, sportsbook ou plataforma de entretenimento com módulos de jogos, bónus, segurança e retenção.' : isTrading ? 'Uma landing fintech com dashboards, métricas, pricing, prova social, automações e confiança visual para produtos de trading.' : isSaas ? 'Um website SaaS com hero forte, bento grid, pricing, integrations, testimonials, FAQ e visual de startup premium.' : 'Uma presença digital high-ticket para consultoria, agência ou negócio B2B com narrativa, métricas e conversão.';
+  const headline = isCasino ? 'Uma experiência igaming premium, rápida e envolvente.' : isTrading ? 'Infraestrutura premium para traders, sinais e capital.' : isSaas ? 'Software com estética de produto global.' : 'Sistemas digitais para negócios que querem escalar.';
+  const sub = isCasino ? 'Plataforma dark premium para casino, sportsbook ou entretenimento digital com lobby, bónus, segurança, pagamentos e retenção.' : isTrading ? 'Uma experiência fintech com dashboards, métricas, pricing, prova social, automações e confiança visual para produtos de trading.' : isSaas ? 'Uma presença SaaS com produto claro, integrações, automações, analytics, pricing e uma narrativa preparada para converter.' : 'Uma presença digital high-ticket para consultoria, agência ou negócio B2B com narrativa, métricas e conversão.';
   const primary = isCasino ? 'Explorar plataforma' : isTrading ? 'Ver sistema' : isSaas ? 'Começar demo' : 'Agendar estratégia';
   const accent = isCasino ? '#f59e0b' : isTrading ? '#22c55e' : isSaas ? '#8b5cf6' : '#38bdf8';
   const accent2 = isCasino ? '#ec4899' : isTrading ? '#38bdf8' : isSaas ? '#06b6d4' : '#8b5cf6';
+  const sectionTitle = isCasino ? 'Tudo o que uma plataforma de jogo precisa para converter.' : isTrading ? 'Ferramentas criadas para performance e confiança.' : isSaas ? 'Funcionalidades que transformam operações em automações.' : 'Sistemas para captar, vender e entregar melhor.';
+  const sectionDescription = isCasino ? 'Lobby, bónus, pagamentos, segurança e retenção trabalham juntos para criar uma experiência fluida e credível.' : isTrading ? 'Sinais, gestão de risco, analytics e automações dão aos utilizadores uma visão clara da operação.' : isSaas ? 'Workflows, portal cliente, analytics e integrações reduzem trabalho manual e aumentam velocidade.' : 'Estratégia, aquisição, operações e autoridade digital reunidas numa experiência premium.';
+  const proofTitle = isCasino ? 'Operação preparada para escala.' : isTrading ? 'Métricas que inspiram confiança.' : isSaas ? 'Visibilidade total sobre crescimento.' : 'Decisões apoiadas por dados.';
+  const testimonial = isCasino ? '“A experiência parece rápida, segura e premium desde o primeiro clique.”' : isTrading ? '“Finalmente uma presença fintech que transmite confiança antes mesmo do onboarding.”' : isSaas ? '“O produto ficou claro, moderno e muito mais fácil de vender.”' : '“A marca passou a parecer maior, mais clara e mais preparada para fechar clientes.”';
   const cards = isCasino
-    ? ['Casino lobby inteligente', 'Bónus e loyalty engine', 'Pagamentos e KYC', 'Retenção por segmentos']
+    ? ['Lobby inteligente', 'Bónus e loyalty', 'Pagamentos e KYC', 'Retenção por segmentos']
     : isTrading
       ? ['Copy trading engine', 'Risk dashboard', 'Payout automation', 'TradingView signals']
       : isSaas
@@ -65,43 +69,43 @@ function highTicketTemplate(prompt: string): GeneratedProject {
         <p class="eyebrow">${eyebrow}</p>
         <h1>${headline}</h1>
         <p class="lead">${sub}</p>
-        <div class="actions"><button class="primary" data-target="pricing">${primary}</button><button class="secondary" data-target="platform">Ver módulos</button></div>
+        <div class="actions"><button class="primary" data-target="pricing">${primary}</button><button class="secondary" data-target="platform">Ver funcionalidades</button></div>
         <div class="trust"><span>99.9% uptime</span><span>Live analytics</span><span>Premium UX</span></div>
       </div>
       <div class="heroVisual reveal">
         <div class="dashTop"><span></span><span></span><span></span></div>
-        <div class="metricHero"><small>Monthly volume</small><strong>${isCasino ? '€8.4M' : isTrading ? '$42.8M' : '1.8M'}</strong><em>+${isCasino ? '31' : isTrading ? '24' : '42'}% growth</em></div>
+        <div class="metricHero"><small>Volume mensal</small><strong>${isCasino ? '€8.4M' : isTrading ? '$42.8M' : '1.8M'}</strong><em>+${isCasino ? '31' : isTrading ? '24' : '42'}% crescimento</em></div>
         <div class="chart"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-        <div class="miniGrid"><div><b>${isCasino ? 'RTP' : isTrading ? 'Win rate' : 'ARR'}</b><span>${isCasino ? '97.2%' : isTrading ? '68%' : '€420k'}</span></div><div><b>Users</b><span>${isCasino ? '128k' : isTrading ? '24k' : '18k'}</span></div><div><b>Latency</b><span>32ms</span></div></div>
+        <div class="miniGrid"><div><b>${isCasino ? 'RTP' : isTrading ? 'Win rate' : 'ARR'}</b><span>${isCasino ? '97.2%' : isTrading ? '68%' : '€420k'}</span></div><div><b>Utilizadores</b><span>${isCasino ? '128k' : isTrading ? '24k' : '18k'}</span></div><div><b>Latência</b><span>32ms</span></div></div>
       </div>
     </section>
 
-    <section class="logos"><span>Trusted stack</span><b>Stripe</b><b>Vercel</b><b>TradingView</b><b>OpenAI</b><b>Cloudflare</b></section>
+    <section class="logos"><span>STACK CONFIÁVEL</span><b>Stripe</b><b>Vercel</b><b>TradingView</b><b>OpenAI</b><b>Cloudflare</b></section>
 
     <section id="platform" class="section">
-      <div class="sectionHead reveal"><p class="eyebrow">DESIGN SYSTEM</p><h2>Blocos premium para parecer produto real.</h2><p>Em vez de layout aleatório, esta página usa componentes consistentes: hero, bento grid, dashboard, pricing, social proof e CTA.</p></div>
+      <div class="sectionHead reveal"><p class="eyebrow">PLATAFORMA</p><h2>${sectionTitle}</h2><p>${sectionDescription}</p></div>
       <div class="bento">
-        ${cards.map((card, index) => `<article class="bentoCard reveal"><div class="icon">${index + 1}</div><h3>${card}</h3><p>Componente visual com copy, dados simulados e interação pronta para adaptar ao cliente final.</p></article>`).join('')}
+        ${cards.map((card, index) => `<article class="bentoCard reveal"><div class="icon">${index + 1}</div><h3>${card}</h3><p>${isCasino ? 'Módulo pensado para aumentar confiança, retenção e valor por utilizador.' : isTrading ? 'Camada operacional para dar clareza, velocidade e controlo à experiência de trading.' : isSaas ? 'Funcionalidade preparada para reduzir fricção e acelerar adoção do produto.' : 'Sistema pensado para melhorar aquisição, entrega e percepção de valor.'}</p></article>`).join('')}
       </div>
     </section>
 
     <section id="proof" class="proof">
-      <div class="panel reveal"><p class="eyebrow">LIVE OPERATIONS</p><h2>Dashboard com sinais de produto sério.</h2><div class="rows"><div><span>Conversion</span><b>12.8%</b></div><div><span>Retention</span><b>74%</b></div><div><span>Revenue pipeline</span><b>${isCasino ? '€2.1M' : isTrading ? '$870k' : '€310k'}</b></div></div></div>
-      <div class="testimonial reveal"><blockquote>“Parece uma plataforma real, não uma landing genérica de IA. A hierarquia, os detalhes e os micro-elementos dão confiança imediata.”</blockquote><span>— Cliente beta</span></div>
+      <div class="panel reveal"><p class="eyebrow">OPERAÇÃO</p><h2>${proofTitle}</h2><div class="rows"><div><span>Conversão</span><b>12.8%</b></div><div><span>Retenção</span><b>74%</b></div><div><span>Pipeline</span><b>${isCasino ? '€2.1M' : isTrading ? '$870k' : '€310k'}</b></div></div></div>
+      <div class="testimonial reveal"><blockquote>${testimonial}</blockquote><span>— Cliente beta</span></div>
     </section>
 
     <section id="pricing" class="section">
-      <div class="sectionHead reveal"><p class="eyebrow">PLANS</p><h2>Planos com foco em conversão.</h2></div>
+      <div class="sectionHead reveal"><p class="eyebrow">PLANOS</p><h2>Escolhe o nível certo para lançar.</h2></div>
       <div class="pricing">
-        <article class="price reveal"><p>Launch</p><h3>€490</h3><span>Landing premium + analytics + formulário</span><button data-target="contact">Escolher</button></article>
-        <article class="price featured reveal"><div class="badge">Popular</div><p>Growth</p><h3>€1.490</h3><span>Multi-page + dashboard + automações</span><button data-target="contact">Começar</button></article>
-        <article class="price reveal"><p>Scale</p><h3>Custom</h3><span>SaaS completo, integrações e área cliente</span><button data-target="contact">Falar</button></article>
+        <article class="price reveal"><p>Launch</p><h3>€490</h3><span>Landing premium, analytics e formulário</span><button data-target="contact">Escolher</button></article>
+        <article class="price featured reveal"><div class="badge">Popular</div><p>Growth</p><h3>€1.490</h3><span>Multi-page, dashboard e automações</span><button data-target="contact">Começar</button></article>
+        <article class="price reveal"><p>Scale</p><h3>Custom</h3><span>Produto completo, integrações e área cliente</span><button data-target="contact">Falar</button></article>
       </div>
     </section>
 
-    <section id="faq" class="faqWrap"><div class="sectionHead reveal"><p class="eyebrow">FAQ</p><h2>Perguntas rápidas.</h2></div><div class="faqList"><button class="faq">Isto é funcional?<p>Sim. O preview inclui navegação, interações, estados visuais e formulários simulados.</p></button><button class="faq">Posso adicionar páginas?<p>Sim. O builder cria páginas internas ligadas pelo menu no mesmo preview.</p></button><button class="faq">Pode virar produto real?<p>Sim, depois ligamos backend, pagamentos, base de dados e autenticação.</p></button></div></section>
+    <section id="faq" class="faqWrap"><div class="sectionHead reveal"><p class="eyebrow">FAQ</p><h2>Perguntas rápidas.</h2></div><div class="faqList"><button class="faq">Quanto tempo demora a lançar?<p>Uma primeira versão pode ficar pronta rapidamente e evoluir por fases com integrações reais.</p></button><button class="faq">Pode ter várias páginas?<p>Sim. A experiência pode incluir home, sobre, serviços, pricing, booking, dashboard e contacto.</p></button><button class="faq">Pode integrar backend?<p>Sim. Depois podem ser ligados pagamentos, base de dados, autenticação e automações.</p></button></div></section>
 
-    <section id="contact" class="contact"><div><p class="eyebrow">NEXT STEP</p><h2>Transforma isto num produto vendável.</h2><p>Usa este design system como base e pede alterações no chat: novas páginas, secções, booking, copy, imagens, dashboards e automações.</p></div><form id="contactForm"><input placeholder="Nome" required/><input type="email" placeholder="Email" required/><textarea placeholder="O que queres construir?" required></textarea><button class="primary" type="submit">Enviar pedido</button><p id="successMessage">Pedido recebido. Simulação funcional.</p></form></section>
+    <section id="contact" class="contact"><div><p class="eyebrow">PRÓXIMO PASSO</p><h2>Vamos transformar a visão num produto vendável.</h2><p>Conta-nos o objetivo da plataforma e recebemos o briefing para preparar uma experiência com estratégia, design e conversão.</p></div><form id="contactForm"><input placeholder="Nome" required/><input type="email" placeholder="Email" required/><textarea placeholder="O que queres construir?" required></textarea><button class="primary" type="submit">Enviar pedido</button><p id="successMessage">Pedido recebido. Entraremos em contacto.</p></form></section>
   </main>
   <script src="script.js"></script>
 </body></html>`,
@@ -153,7 +157,7 @@ export async function POST(request: NextRequest) {
 
     const instruction = `Gera um projeto vanilla HTML/CSS/JS premium em português europeu para: ${cleanPrompt}. Referência opcional: ${referenceUrl || 'nenhuma'}.
 Responde só JSON válido com html, css e js. Não coloques o prompt bruto na página.
-Usa estilo high-ticket moderno: dark premium, bento grid, glassmorphism, dashboards, microinterações, spacing profissional, dados realistas, pricing, FAQ, CTA e animações subtis.`;
+Usa estilo high-ticket moderno: dark premium, bento grid, glassmorphism, dashboards, microinterações, spacing profissional, dados realistas, pricing, FAQ, CTA e animações subtis. O texto deve falar do negócio do cliente, nunca do builder, do template ou de componentes internos.`;
 
     const errors: string[] = [];
     for (const model of GEMINI_MODELS) {
