@@ -1,5 +1,11 @@
 type AssetNiche = 'trading' | 'photography' | 'beauty' | 'technology';
 
+type RuntimeImages = {
+  hero?: string;
+  showcase?: string;
+  mockup?: string;
+};
+
 const imageSets = {
   photography: [
     'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1400&q=80',
@@ -22,24 +28,34 @@ const imageSets = {
   ],
 };
 
-export function premiumAssetSection(niche: AssetNiche, sub = '') {
+function resolveImages(niche: AssetNiche, runtimeImages?: RuntimeImages) {
+  const fallback = imageSets[niche];
+  return [
+    runtimeImages?.hero || fallback[0],
+    runtimeImages?.showcase || fallback[1] || fallback[0],
+    runtimeImages?.mockup || fallback[2] || runtimeImages?.showcase || fallback[1] || fallback[0],
+    fallback[3] || runtimeImages?.mockup || fallback[0],
+  ];
+}
+
+export function premiumAssetSection(niche: AssetNiche, sub = '', runtimeImages?: RuntimeImages) {
   if (niche === 'photography') {
-    const imgs = imageSets.photography;
+    const imgs = resolveImages(niche, runtimeImages);
     return `<section id="showcase" class="assetShowcase sectionTransition"><div class="sectionHead reveal"><p class="eyebrow">Experiência visual</p><h2>Galerias com presença editorial.</h2><p>Uma composição visual com histórias, coleções e entregas privadas para elevar a perceção do trabalho fotográfico.</p></div><div class="photoShowcase reveal parallaxLayer animatedBorder" data-parallax="0.05"><article class="photoLarge floatAsset imageTile" style="--asset:url('${imgs[0]}')"><span>01</span><b>Wedding story</b></article><article class="imageTile" style="--asset:url('${imgs[1]}')"><span>02</span><b>Editorial portrait</b></article><article class="imageTile" style="--asset:url('${imgs[2]}')"><span>03</span><b>Brand campaign</b></article><article class="imageTile" style="--asset:url('${imgs[3]}')"><span>04</span><b>Private gallery</b></article></div></section>`;
   }
 
   if (niche === 'beauty') {
-    const imgs = imageSets.beauty;
+    const imgs = resolveImages(niche, runtimeImages);
     return `<section id="showcase" class="assetShowcase sectionTransition"><div class="sectionHead reveal"><p class="eyebrow">Reserva online</p><h2>Uma experiência de marcação simples e elegante.</h2><p>Serviços, disponibilidade, cliente e confirmação organizados para transformar interesse em reserva.</p></div><div class="beautyShowcase reveal parallaxLayer animatedBorder" data-parallax="0.05"><div class="beautyImage imageTile floatAsset" style="--asset:url('${imgs[0]}')"></div><div class="deviceCard floatAsset"><b>Agenda de hoje</b><p>14:30 · Serviço Premium</p><p>16:00 · Consulta inicial</p><p>18:00 · Cliente recorrente</p><button class="magnetic">Confirmar reserva</button></div><div class="serviceStack"><article class="imageTile" style="--asset:url('${imgs[1]}')"><span>Popular</span><b>Tratamento Glow</b><em>75 min</em></article><article class="imageTile" style="--asset:url('${imgs[2]}')"><span>VIP</span><b>Plano mensal</b><em>4 sessões</em></article></div></div></section>`;
   }
 
   if (niche === 'trading') {
     const isCopy = sub.includes('copy');
-    const imgs = imageSets.trading;
+    const imgs = resolveImages(niche, runtimeImages);
     return `<section id="showcase" class="assetShowcase sectionTransition"><div class="sectionHead reveal"><p class="eyebrow">${isCopy ? 'Performance' : 'Trader workspace'}</p><h2>${isCopy ? 'Estratégias, risco e execução num painel credível.' : 'Challenges, regras e payouts com visual institucional.'}</h2><p>Uma área visual com dados, sinais, risco e atividade para transmitir confiança antes da conversão.</p></div><div class="tradingShowcase reveal parallaxLayer animatedBorder" data-parallax="0.05"><div class="terminalPanel"><div class="terminalHeader"><i></i><i></i><i></i><span>${isCopy ? 'copy-signal/live' : 'funded-risk/live'}</span></div><div class="signalRows"><p><b>EURUSD</b><span>Long · +2.4R</span></p><p><b>NAS100</b><span>Risk 0.8%</span></p><p><b>BTCUSD</b><span>Trailing active</span></p></div></div><div class="tradingImage imageTile" style="--asset:url('${imgs[0]}')"></div><div class="floatingMetrics"><article class="floatAsset"><small>Risk</small><strong>A+</strong></article><article class="floatAsset"><small>Equity</small><strong>$184k</strong></article><article class="floatAsset imageTile" style="--asset:url('${imgs[1]}')"><small>Payout</small><strong>€28k</strong></article></div></div></section>`;
   }
 
-  const imgs = imageSets.technology;
+  const imgs = resolveImages(niche, runtimeImages);
   return `<section id="showcase" class="assetShowcase sectionTransition"><div class="sectionHead reveal"><p class="eyebrow">Produto em ação</p><h2>Dashboards e automações com aparência de software real.</h2><p>Interfaces, fluxos e métricas organizados para mostrar como a plataforma funciona no dia a dia.</p></div><div class="saasShowcase reveal parallaxLayer animatedBorder" data-parallax="0.05"><div class="saasImage imageTile floatAsset" style="--asset:url('${imgs[0]}')"></div><div class="workflowCanvas"><article><span>01</span><b>Capture lead</b></article><article><span>02</span><b>Run AI workflow</b></article><article><span>03</span><b>Sync CRM</b></article><article><span>04</span><b>Notify team</b></article></div><div class="insightCard imageTile floatAsset" style="--asset:url('${imgs[1]}')"><small>Automation health</small><strong>94%</strong><p>1.8M tasks processed this month</p></div></div></section>`;
 }
 
