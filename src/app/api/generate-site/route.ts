@@ -5,8 +5,9 @@ import { shaderCss, shaderHtml, shaderJs } from '@/lib/shaderEngine';
 import { webglCss, webglHtml, webglJs } from '@/lib/webglEngine';
 import { threeSceneCss, threeSceneHtml, threeSceneJs } from '@/lib/threeSceneEngine';
 import { postProcessingCss, postProcessingHtml, postProcessingJs } from '@/lib/postProcessingEngine';
-import { premiumAssetCss, premiumAssetSection } from '@/lib/visualAssetEngine';
-import { cinematicCss, cinematicSection } from '@/lib/cinematicCompositionEngine';
+import { artDirectionCss, artDirectionJs, artDirectionPage } from '@/lib/artDirectionEngine';
+import { premiumAssetCss } from '@/lib/visualAssetEngine';
+import { cinematicCss } from '@/lib/cinematicCompositionEngine';
 import { generateRealImages } from '@/lib/realImageEngine';
 
 type Project = { html: string; css: string; js: string };
@@ -25,39 +26,23 @@ function analyze(prompt: string, referenceUrl = ''): Intel {
   return { niche: 'technology', sub: 'AI SaaS platform', brand: 'Nexora AI', accent: '#8b5cf6', accent2: '#06b6d4', glow: 'rgba(139,92,246,.26)' };
 }
 
-function fallbackCopy(intel: Intel) {
-  if (intel.niche === 'photography') return { eyebrow: 'EDITORIAL PORTFOLIO', title: 'Histórias visuais com ritmo cinematográfico.', sub: 'Galerias imersivas, páginas de entrega e reservas pensadas para fotografia premium.', cta: 'Explorar histórias' };
-  if (intel.niche === 'beauty') return { eyebrow: 'BEAUTY EXPERIENCE', title: 'Uma agenda elegante para transformar visitas em marcações.', sub: 'Serviços, equipa, calendário e acompanhamento de cliente num fluxo limpo e premium.', cta: 'Marcar visita' };
-  if (intel.sub.includes('copy')) return { eyebrow: 'COPY TRADING PLATFORM', title: 'Acompanha traders, risco e execução em tempo real.', sub: 'Estratégias, histórico, métricas e automações apresentadas com clareza institucional.', cta: 'Ver painel' };
-  if (intel.niche === 'trading') return { eyebrow: 'TRADER FUNDING', title: 'Uma experiência moderna para avaliação e crescimento de traders.', sub: 'Landing, painel de trader, regras, métricas e onboarding organizados numa interface de produto.', cta: 'Ver programas' };
-  return { eyebrow: 'AI PRODUCT', title: 'Automação com aparência de software global.', sub: 'Workflows, dados, clientes e operações apresentados numa experiência SaaS clara e envolvente.', cta: 'Ver produto' };
-}
-
-function coreNicheBlock(intel: Intel) {
-  if (intel.niche === 'photography') return `<section class="storyRail"><article><span>01</span><h3>Casamentos editoriais</h3></article><article><span>02</span><h3>Retratos de marca</h3></article><article><span>03</span><h3>Galerias privadas</h3></article></section>`;
-  if (intel.niche === 'beauty') return `<section class="bookingBoard"><div><b>Hoje</b><p>10:00 Consulta</p><p>14:30 Serviço premium</p><p>18:00 Plano mensal</p></div><form><input placeholder="Nome"/><input placeholder="Contacto"/><button type="button">Reservar</button></form></section>`;
-  if (intel.niche === 'trading') return `<section class="traderDeck"><article><small>Equity</small><strong>$184k</strong></article><article><small>Drawdown</small><strong>3.1%</strong></article><article><small>Execution</small><strong>32ms</strong></article><div class="terminal"><p>EURUSD · Long · +2.4R</p><p>NAS100 · Risk locked</p><p>XAUUSD · Target reached</p></div></section>`;
-  return `<section class="workflowDeck"><article>Capture</article><article>Enrich</article><article>Automate</article><article>Report</article></section>`;
-}
-
-function fallbackHtml(intel: Intel, runtimeImages: Awaited<ReturnType<typeof generateRealImages>>) {
-  const c = fallbackCopy(intel);
-  const nicheBlock = coreNicheBlock(intel);
-  return `<!doctype html><html lang="pt"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>${intel.brand}</title><link rel="stylesheet" href="style.css"/></head><body>${threeSceneHtml()}${webglHtml()}${motionHtml()}${shaderHtml()}${atmosphereHtml()}${postProcessingHtml()}<header class="nav"><b>${intel.brand}</b><nav><button data-target="cinematic">Experiência</button><button data-target="product">Produto</button><button data-target="showcase">Showcase</button><button data-target="pricing">Planos</button><button data-target="contact">Contacto</button></nav></header><main><section class="hero"><div class="copy reveal"><p>${c.eyebrow}</p><h1>${c.title}</h1><span>${c.sub}</span><button class="magnetic" data-target="cinematic">${c.cta}</button></div><div class="visual reveal parallaxLayer animatedBorder" data-parallax="0.1">${nicheBlock}</div></section>${cinematicSection(intel.niche, intel.sub, runtimeImages)}<section id="product" class="split sectionTransition"><h2>${intel.niche === 'trading' ? 'Dados, jornada e confiança no mesmo fluxo.' : intel.niche === 'photography' ? 'Narrativa visual antes de qualquer formulário.' : intel.niche === 'beauty' ? 'Reserva simples com perceção premium.' : 'Fluxos visíveis, operação clara.'}</h2><p>Cada secção foi montada para este nicho, com narrativa, interação e composição visual próprias.</p></section>${premiumAssetSection(intel.niche, intel.sub, runtimeImages)}<section id="pricing" class="pricing sectionTransition"><article><h3>Launch</h3><b>€490</b></article><article class="featured"><h3>Growth</h3><b>€1.490</b></article><article><h3>Scale</h3><b>Custom</b></article></section><section id="contact" class="contact sectionTransition"><h2>Pronto para lançar?</h2><form><input placeholder="Nome"/><input placeholder="Email"/><textarea placeholder="Mensagem"></textarea><button type="button">Enviar</button></form></section></main><script src="script.js"></script></body></html>`;
-}
-
-function fallbackCss(intel: Intel) {
-  return `:root{--bg:#050713;--panel:rgba(255,255,255,.075);--panel2:rgba(255,255,255,.12);--text:#f8fafc;--muted:#9aa4b2;--line:rgba(255,255,255,.13);--accent:${intel.accent};--accent2:${intel.accent2};--glow:${intel.glow}}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 10% -10%,var(--glow),transparent 34%),radial-gradient(circle at 90% 10%,rgba(56,189,248,.13),transparent 38%),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,sans-serif}.nav{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:20px 5vw;border-bottom:1px solid var(--line);background:rgba(5,7,19,.72);backdrop-filter:blur(18px)}.nav b{font-size:20px;letter-spacing:-.05em}.nav nav{display:flex;gap:8px}.nav button,.hero button,.contact button{border:0;border-radius:999px;padding:12px 17px;background:var(--panel);color:var(--text);font-weight:900;cursor:pointer}.hero{min-height:820px;display:grid;grid-template-columns:${intel.niche === 'photography' ? '1.2fr .8fr' : '.9fr 1.1fr'};gap:50px;align-items:center;padding:95px 5vw}.copy p{color:var(--accent);font-size:12px;font-weight:950;letter-spacing:.18em;text-transform:uppercase}.copy h1{font-size:clamp(58px,8vw,118px);line-height:.82;letter-spacing:-.09em;margin:0 0 26px}.copy span{display:block;max-width:740px;color:var(--muted);font-size:20px;line-height:1.7;margin-bottom:24px}.copy button{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#031014}.visual,.pricing article,.split,.contact{border:1px solid var(--line);border-radius:38px;background:linear-gradient(180deg,var(--panel2),rgba(255,255,255,.035));box-shadow:0 34px 100px rgba(0,0,0,.45);padding:24px}.storyRail{display:grid;gap:16px}.storyRail article{min-height:180px;border-radius:30px;padding:24px;background:linear-gradient(135deg,var(--accent),#111827);display:flex;justify-content:space-between;flex-direction:column}.bookingBoard{display:grid;grid-template-columns:1fr;gap:18px}.bookingBoard div,.bookingBoard form,.traderDeck article,.terminal,.workflowDeck article{border:1px solid var(--line);border-radius:26px;background:var(--panel);padding:22px}.bookingBoard input,.contact input,.contact textarea{width:100%;margin-bottom:10px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.08);color:white;padding:14px}.traderDeck{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.traderDeck strong{font-size:42px;color:var(--accent)}.terminal{grid-column:1/-1}.terminal p{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:12px 0}.workflowDeck{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.workflowDeck article{min-height:160px;display:grid;place-items:center;font-size:26px;font-weight:950}.split,.pricing,.contact{margin:100px 5vw}.split h2,.contact h2{font-size:clamp(38px,5vw,76px);line-height:.9;letter-spacing:-.075em}.split p{font-size:18px;color:var(--muted)}.pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.pricing h3{font-size:28px}.pricing b{font-size:46px}.featured{background:linear-gradient(180deg,var(--glow),var(--panel))!important}.contact{display:grid;grid-template-columns:1fr 1fr;gap:30px}@media(max-width:900px){.nav nav{display:none}.hero,.pricing,.contact,.traderDeck{grid-template-columns:1fr}.copy h1{font-size:58px}}`;
-}
-
-function fallbackJs() {
-  return `document.querySelectorAll('[data-target]').forEach((button)=>button.addEventListener('click',()=>{document.getElementById(button.dataset.target)?.scrollIntoView({behavior:'smooth'});}));`;
+function injectFx(html: string) {
+  return html.replace('<body>', `<body>${threeSceneHtml()}${webglHtml()}${motionHtml()}${shaderHtml()}${atmosphereHtml()}${postProcessingHtml()}`);
 }
 
 async function buildFallback(prompt: string, referenceUrl = '') {
   const intel = analyze(prompt, referenceUrl);
-  const runtimeImages = await generateRealImages(intel.niche, intel.sub);
-  return { project: { html: fallbackHtml(intel, runtimeImages), css: `${fallbackCss(intel)}\n${cinematicCss()}\n${premiumAssetCss()}\n${threeSceneCss()}\n${webglCss()}\n${motionCss()}\n${shaderCss()}\n${atmosphereCss()}\n${postProcessingCss()}`, js: `${fallbackJs()}\n${threeSceneJs()}\n${webglJs()}\n${motionJs()}\n${shaderJs()}\n${atmosphereJs()}\n${postProcessingJs()}` }, intelligence: intel, imageSource: runtimeImages.source, imageError: runtimeImages.error };
+  await generateRealImages(intel.niche, intel.sub);
+  const html = injectFx(artDirectionPage(intel));
+  return {
+    project: {
+      html,
+      css: `${artDirectionCss(intel)}\n${cinematicCss()}\n${premiumAssetCss()}\n${threeSceneCss()}\n${webglCss()}\n${motionCss()}\n${shaderCss()}\n${atmosphereCss()}\n${postProcessingCss()}`,
+      js: `${artDirectionJs()}\n${threeSceneJs()}\n${webglJs()}\n${motionJs()}\n${shaderJs()}\n${atmosphereJs()}\n${postProcessingJs()}`,
+    },
+    intelligence: intel,
+    imageSource: 'art-direction',
+  };
 }
 
 function withEngines(project: Project) {
@@ -91,7 +76,7 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY;
     const intel = analyze(clean, referenceUrl || '');
 
-    if (!apiKey) return NextResponse.json({ ...(await buildFallback(clean, referenceUrl || '')), source: 'fallback-no-gemini-key', model: 'post-processing-v17' });
+    if (!apiKey) return NextResponse.json({ ...(await buildFallback(clean, referenceUrl || '')), source: 'fallback-no-gemini-key', model: 'art-direction-v18' });
 
     const seed = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const instruction = `Gera um WEBSITE NOVO do zero em vanilla HTML/CSS/JS para: ${clean}.
@@ -101,15 +86,17 @@ Seed criativo obrigatório: ${seed}.
 
 Regras obrigatórias:
 - Responde APENAS JSON válido com html, css e js.
-- Não uses frases genéricas como "visual institucional", "produto real", "engine", "template", "AI builder", "component system" ou "showcase" como texto de marketing.
 - Nunca mostres o prompt bruto do utilizador no site final.
-- Não cries uma landing plana. Cria uma experiência cinematográfica com cenas visuais, camadas, overlap, depth, assimetria e scroll storytelling.
-- Usa composições com elementos sobrepostos, parallaxLayer, animatedBorder, floatAsset, magnetic, sectionTransition e reveal.
-- Para prop firm/trading: criar ambiente financeiro com terminais flutuantes, métricas em camadas, dashboards, tabelas, planos e onboarding.
-- Para fotografia: criar portfólio editorial com imagens grandes, frames sobrepostos, storytelling visual e pacotes.
-- Para beauty: criar agenda/booking, retratos de marca, serviços em camadas e prova social.
-- Para SaaS: criar dashboards flutuantes, workflow nodes, analytics e landing de produto.
-- Inclui CSS completo e JS funcional para botões, navegação, tabs ou interações.
+- Não cries cards por cima de texto, overlays ilegíveis ou elementos desalinhados.
+- Não cries uma landing plana nem grids genéricas. Cria uma composição editorial/cinemática com zonas claras: hero copy, visual stage, metrics bar e product panel.
+- O 3D/WebGL deve funcionar como atmosfera ou visual stage, nunca como overlay que cobre conteúdo.
+- Usa spacing consistente, alinhamento premium e hierarquia visual clara.
+- Para prop firm/trading: criar command center financeiro com métricas alinhadas, dashboard e visual stage.
+- Para fotografia: criar portfólio editorial com imagem, ritmo e hierarquia.
+- Para beauty: criar booking premium com serviço, agenda e confiança.
+- Para SaaS: criar produto com dashboards e workflow surface.
+- Usa motion classes apenas quando ajudam a composição: reveal, parallaxLayer, animatedBorder, floatAsset, magnetic, sectionTransition.
+- Inclui CSS completo e JS funcional.
 - O resultado tem de parecer diferente a cada nova geração.`;
 
     const errors: string[] = [];
@@ -118,10 +105,10 @@ Regras obrigatórias:
       if (!response.ok) { errors.push(`${model}: ${await response.text()}`); continue; }
       const data = await response.json();
       const text = data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || '').join('\n') || '';
-      return NextResponse.json({ ...(await parseProject(text, clean, referenceUrl || '')), source: 'gemini-post-processing', model, seed });
+      return NextResponse.json({ ...(await parseProject(text, clean, referenceUrl || '')), source: 'gemini-art-direction', model, seed });
     }
 
-    return NextResponse.json({ ...(await buildFallback(clean, referenceUrl || '')), source: 'fallback-after-gemini-error', model: 'post-processing-v17', error: errors.join('\n\n') });
+    return NextResponse.json({ ...(await buildFallback(clean, referenceUrl || '')), source: 'fallback-after-gemini-error', model: 'art-direction-v18', error: errors.join('\n\n') });
   } catch (error) {
     return NextResponse.json({ ...(await buildFallback('site premium de tecnologia')), source: 'fallback-error', error: String(error) });
   }
