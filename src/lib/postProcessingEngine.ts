@@ -1,0 +1,11 @@
+export function postProcessingHtml(){
+  return '<div class="postBloom"></div><div class="postVignette"></div><div class="postGrain"></div><div class="postAberration"></div><div class="postScanlight"></div>';
+}
+
+export function postProcessingCss(){
+  return `.postBloom{position:fixed;inset:-20%;z-index:2;pointer-events:none;opacity:.2;filter:blur(70px) saturate(1.45);background:radial-gradient(circle at var(--post-x,48%) var(--post-y,42%),var(--accent),transparent 24%),radial-gradient(circle at 72% 70%,var(--accent2),transparent 32%);mix-blend-mode:screen}.postVignette{position:fixed;inset:0;z-index:8;pointer-events:none;background:radial-gradient(circle at 50% 40%,transparent 0 48%,rgba(0,0,0,.38) 100%)}.postGrain{position:fixed;inset:0;z-index:9;pointer-events:none;opacity:.075;mix-blend-mode:overlay;background-image:repeating-radial-gradient(circle at 17% 32%,rgba(255,255,255,.9) 0 1px,transparent 1px 3px);background-size:160px 160px;animation:grainShift .7s steps(2) infinite}.postAberration{position:fixed;inset:0;z-index:7;pointer-events:none;opacity:.11;background:linear-gradient(90deg,rgba(255,0,90,.32),transparent 18%,transparent 82%,rgba(0,225,255,.28));mix-blend-mode:screen}.postScanlight{position:fixed;left:-20%;right:-20%;top:-30%;height:40vh;z-index:7;pointer-events:none;opacity:.11;background:linear-gradient(180deg,transparent,rgba(255,255,255,.62),transparent);filter:blur(26px);transform:rotate(-8deg);animation:scanlight 11s ease-in-out infinite}@keyframes grainShift{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(-3%,2%,0)}}@keyframes scanlight{0%,100%{top:-45%;opacity:.03}42%{top:45%;opacity:.13}70%{top:120%;opacity:.02}}@media(max-width:900px){.postBloom{opacity:.13}.postGrain{opacity:.045}.postAberration,.postScanlight{display:none}}@media(prefers-reduced-motion:reduce){.postGrain,.postScanlight{animation:none!important}}`;
+}
+
+export function postProcessingJs(){
+  return `(function(){let tx=48,ty=42,cx=48,cy=42;window.addEventListener('mousemove',e=>{tx=42+(e.clientX/window.innerWidth)*16;ty=34+(e.clientY/window.innerHeight)*18;});function tick(){cx+=(tx-cx)*.045;cy+=(ty-cy)*.045;document.documentElement.style.setProperty('--post-x',cx+'%');document.documentElement.style.setProperty('--post-y',cy+'%');requestAnimationFrame(tick)}tick();})();`;
+}
