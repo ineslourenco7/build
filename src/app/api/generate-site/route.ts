@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { motionCss, motionHtml, motionJs } from '@/lib/motionEngine';
 import { premiumAssetCss, premiumAssetSection } from '@/lib/visualAssetEngine';
+import { cinematicCss, cinematicSection } from '@/lib/cinematicCompositionEngine';
 import { generateRealImages } from '@/lib/realImageEngine';
 
 type Project = { html: string; css: string; js: string };
@@ -37,7 +38,7 @@ function coreNicheBlock(intel: Intel) {
 function fallbackHtml(intel: Intel, runtimeImages: Awaited<ReturnType<typeof generateRealImages>>) {
   const c = fallbackCopy(intel);
   const nicheBlock = coreNicheBlock(intel);
-  return `<!doctype html><html lang="pt"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>${intel.brand}</title><link rel="stylesheet" href="style.css"/></head><body>${motionHtml()}<header class="nav"><b>${intel.brand}</b><nav><button data-target="product">Produto</button><button data-target="showcase">Experiência</button><button data-target="pricing">Planos</button><button data-target="contact">Contacto</button></nav></header><main><section class="hero"><div class="copy reveal"><p>${c.eyebrow}</p><h1>${c.title}</h1><span>${c.sub}</span><button class="magnetic" data-target="showcase">${c.cta}</button></div><div class="visual reveal parallaxLayer animatedBorder" data-parallax="0.1">${nicheBlock}</div></section><section id="product" class="split sectionTransition"><h2>${intel.niche === 'trading' ? 'Dados, jornada e confiança no mesmo fluxo.' : intel.niche === 'photography' ? 'Narrativa visual antes de qualquer formulário.' : intel.niche === 'beauty' ? 'Reserva simples com perceção premium.' : 'Fluxos visíveis, operação clara.'}</h2><p>Cada secção foi montada para este nicho, com narrativa, interação e composição visual próprias.</p></section>${premiumAssetSection(intel.niche, intel.sub, runtimeImages)}<section id="pricing" class="pricing sectionTransition"><article><h3>Launch</h3><b>€490</b></article><article class="featured"><h3>Growth</h3><b>€1.490</b></article><article><h3>Scale</h3><b>Custom</b></article></section><section id="contact" class="contact sectionTransition"><h2>Pronto para lançar?</h2><form><input placeholder="Nome"/><input placeholder="Email"/><textarea placeholder="Mensagem"></textarea><button type="button">Enviar</button></form></section></main><script src="script.js"></script></body></html>`;
+  return `<!doctype html><html lang="pt"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/><title>${intel.brand}</title><link rel="stylesheet" href="style.css"/></head><body>${motionHtml()}<header class="nav"><b>${intel.brand}</b><nav><button data-target="cinematic">Experiência</button><button data-target="product">Produto</button><button data-target="showcase">Showcase</button><button data-target="pricing">Planos</button><button data-target="contact">Contacto</button></nav></header><main><section class="hero"><div class="copy reveal"><p>${c.eyebrow}</p><h1>${c.title}</h1><span>${c.sub}</span><button class="magnetic" data-target="cinematic">${c.cta}</button></div><div class="visual reveal parallaxLayer animatedBorder" data-parallax="0.1">${nicheBlock}</div></section>${cinematicSection(intel.niche, intel.sub, runtimeImages)}<section id="product" class="split sectionTransition"><h2>${intel.niche === 'trading' ? 'Dados, jornada e confiança no mesmo fluxo.' : intel.niche === 'photography' ? 'Narrativa visual antes de qualquer formulário.' : intel.niche === 'beauty' ? 'Reserva simples com perceção premium.' : 'Fluxos visíveis, operação clara.'}</h2><p>Cada secção foi montada para este nicho, com narrativa, interação e composição visual próprias.</p></section>${premiumAssetSection(intel.niche, intel.sub, runtimeImages)}<section id="pricing" class="pricing sectionTransition"><article><h3>Launch</h3><b>€490</b></article><article class="featured"><h3>Growth</h3><b>€1.490</b></article><article><h3>Scale</h3><b>Custom</b></article></section><section id="contact" class="contact sectionTransition"><h2>Pronto para lançar?</h2><form><input placeholder="Nome"/><input placeholder="Email"/><textarea placeholder="Mensagem"></textarea><button type="button">Enviar</button></form></section></main><script src="script.js"></script></body></html>`;
 }
 
 function fallbackCss(intel: Intel) {
@@ -51,13 +52,13 @@ function fallbackJs() {
 async function buildFallback(prompt: string, referenceUrl = '') {
   const intel = analyze(prompt, referenceUrl);
   const runtimeImages = await generateRealImages(intel.niche, intel.sub);
-  return { project: { html: fallbackHtml(intel, runtimeImages), css: `${fallbackCss(intel)}\n${premiumAssetCss()}\n${motionCss()}`, js: `${fallbackJs()}\n${motionJs()}` }, intelligence: intel, imageSource: runtimeImages.source, imageError: runtimeImages.error };
+  return { project: { html: fallbackHtml(intel, runtimeImages), css: `${fallbackCss(intel)}\n${cinematicCss()}\n${premiumAssetCss()}\n${motionCss()}`, js: `${fallbackJs()}\n${motionJs()}` }, intelligence: intel, imageSource: runtimeImages.source, imageError: runtimeImages.error };
 }
 
 function withEngines(project: Project) {
   let html = project.html;
   if (!html.includes('motionGrid')) html = html.replace('<body>', `<body>${motionHtml()}`);
-  return { html, css: `${project.css}\n${premiumAssetCss()}\n${motionCss()}`, js: `${project.js}\n${motionJs()}` };
+  return { html, css: `${project.css}\n${cinematicCss()}\n${premiumAssetCss()}\n${motionCss()}`, js: `${project.js}\n${motionJs()}` };
 }
 
 async function parseProject(text: string, prompt: string, referenceUrl = '') {
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY;
     const intel = analyze(clean, referenceUrl || '');
 
-    if (!apiKey) return NextResponse.json({ ...(await buildFallback(clean, referenceUrl || '')), source: 'fallback-no-gemini-key', model: 'visual-asset-v11' });
+    if (!apiKey) return NextResponse.json({ ...(await buildFallback(clean, referenceUrl || '')), source: 'fallback-no-gemini-key', model: 'cinematic-v12' });
 
     const seed = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const instruction = `Gera um WEBSITE NOVO do zero em vanilla HTML/CSS/JS para: ${clean}.
@@ -92,12 +93,12 @@ Regras obrigatórias:
 - Responde APENAS JSON válido com html, css e js.
 - Não uses frases genéricas como "visual institucional", "produto real", "engine", "template", "AI builder", "component system" ou "showcase" como texto de marketing.
 - Nunca mostres o prompt bruto do utilizador no site final.
-- Não reutilizes estrutura fixa: muda composição, ordem de secções, hero, grids, navegação, spacing e blocos conforme o nicho.
-- Para prop firm/trading: criar visual de produto financeiro com hero próprio, painel de trader, tabelas, métricas, planos e fluxo de onboarding.
-- Para fotografia: criar portfólio editorial com galerias grandes, narrativa visual e pacotes.
-- Para beauty: criar agenda/booking, serviços e prova social.
-- Para SaaS: criar dashboard/workflows e landing de produto.
-- Usa motion classes disponíveis: reveal, animatedBorder, parallaxLayer, floatAsset, magnetic, sectionTransition.
+- Não cries uma landing plana. Cria uma experiência cinematográfica com cenas visuais, camadas, overlap, depth, assimetria e scroll storytelling.
+- Usa composições com elementos sobrepostos, parallaxLayer, animatedBorder, floatAsset, magnetic, sectionTransition e reveal.
+- Para prop firm/trading: criar ambiente financeiro com terminais flutuantes, métricas em camadas, dashboards, tabelas, planos e onboarding.
+- Para fotografia: criar portfólio editorial com imagens grandes, frames sobrepostos, storytelling visual e pacotes.
+- Para beauty: criar agenda/booking, retratos de marca, serviços em camadas e prova social.
+- Para SaaS: criar dashboards flutuantes, workflow nodes, analytics e landing de produto.
 - Inclui CSS completo e JS funcional para botões, navegação, tabs ou interações.
 - O resultado tem de parecer diferente a cada nova geração.`;
 
@@ -107,10 +108,10 @@ Regras obrigatórias:
       if (!response.ok) { errors.push(`${model}: ${await response.text()}`); continue; }
       const data = await response.json();
       const text = data?.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || '').join('\n') || '';
-      return NextResponse.json({ ...(await parseProject(text, clean, referenceUrl || '')), source: 'gemini-variable', model, seed });
+      return NextResponse.json({ ...(await parseProject(text, clean, referenceUrl || '')), source: 'gemini-cinematic', model, seed });
     }
 
-    return NextResponse.json({ ...(await buildFallback(clean, referenceUrl || '')), source: 'fallback-after-gemini-error', model: 'visual-asset-v11', error: errors.join('\n\n') });
+    return NextResponse.json({ ...(await buildFallback(clean, referenceUrl || '')), source: 'fallback-after-gemini-error', model: 'cinematic-v12', error: errors.join('\n\n') });
   } catch (error) {
     return NextResponse.json({ ...(await buildFallback('site premium de tecnologia')), source: 'fallback-error', error: String(error) });
   }
