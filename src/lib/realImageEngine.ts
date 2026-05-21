@@ -6,9 +6,38 @@ type GeneratedImages = {
   hero?: string;
   showcase?: string;
   mockup?: string;
-  source: 'openai' | 'fallback';
+  background?: string;
+  source: 'openai' | 'fallback' | 'cache';
   error?: string;
 };
+
+type CachedImage = {
+  value: GeneratedImages;
+  expiresAt: number;
+};
+
+const imageCache = new Map<string, CachedImage>();
+const CACHE_TTL = 1000 * 60 * 60;
+
+function cacheKey(niche: ImageNiche, sub = '') {
+  return `${niche}:${sub.toLowerCase().trim()}`;
+}
+
+function getCached(key: string) {
+  const cached = imageCache.get(key);
+  if (!cached) return null;
+  if (cached.expiresAt < Date.now()) {
+    imageCache.delete(key);
+    return null;
+  }
+  return { ...cached.value, source: 'cache' as const };
+}
+
+function setCached(key: string, value: GeneratedImages) {
+  if (value.source === 'openai') {
+    imageCache.set(key, { value, expiresAt: Date.now() + CACHE_TTL });
+  }
+}
 
 async function generateOpenAIImage(prompt: string) {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -23,7 +52,7 @@ async function generateOpenAIImage(prompt: string) {
     body: JSON.stringify({
       model: process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1',
       prompt,
-      size: '1536x1024',
+      size: process.env.OPENAI_IMAGE_SIZE || '1536x1024',
       n: 1,
     }),
   });
@@ -42,24 +71,43 @@ async function generateOpenAIImage(prompt: string) {
   return null;
 }
 
+async function safeGenerate(prompt: string) {
+  try {
+    return await generateOpenAIImage(prompt);
+  } catch {
+    return null;
+  }
+}
+
 export async function generateRealImages(niche: ImageNiche, sub = ''): Promise<GeneratedImages> {
   if (!process.env.OPENAI_API_KEY) {
     return { source: 'fallback' };
   }
 
+  const key = cacheKey(niche, sub);
+  const cached = getCached(key);
+  if (cached) return cached;
+
   try {
     const prompts = imagePromptSet(niche, sub);
 
-    const [hero, showcase] = await Promise.all([
-      generateOpenAIImage(prompts.hero),
-      generateOpenAIImage(prompts.showcase),
+    const [hero, showcase, mockup, background] = await Promise.all([
+      safeGenerate(prompts.hero),
+      safeGenerate(prompts.showcase),
+      safeGenerate(prompts.mockup),
+      safeGenerate(prompts.background),
     ]);
 
-    return {
+    const result: GeneratedImages = {
       hero: hero || undefined,
       showcase: showcase || undefined,
-      source: hero || showcase ? 'openai' : 'fallback',
+      mockup: mockup || undefined,
+      background: background || undefined,
+      source: hero || showcase || mockup || background ? 'openai' : 'fallback',
     };
+
+    setCached(key, result);
+    return result;
   } catch (error) {
     return {
       source: 'fallback',
